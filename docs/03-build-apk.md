@@ -96,7 +96,7 @@ flutter build apk --release --build-name=1.0.1 --build-number=2
 
 ## Identifiant de l'application
 
-Android reconnaît une application à son identifiant, ici **`com.balamo.app`** (ligne `applicationId` de `android/app/build.gradle.kts` ; côté iOS, `PRODUCT_BUNDLE_IDENTIFIER` dans le projet Xcode). Tant que l'application circule en APK, il peut rester tel quel. Avant une publication sur un store, remplace-le par un identifiant bâti sur un nom de domaine qui t'appartient (par exemple `fr.mondomaine.balamo`) : une fois l'application publiée, il ne peut plus changer.
+Android reconnaît une application à son identifiant, ici **`fr.balamo.game`** (ligne `applicationId` de `android/app/build.gradle.kts` ; côté iOS, `PRODUCT_BUNDLE_IDENTIFIER` dans le projet Xcode). C'est le nom de package saisi dans la Play Console : il doit rester identique, et il ne peut plus changer une fois l'application publiée.
 
 ## Signature : à lire avant de diffuser largement
 

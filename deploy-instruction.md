@@ -7,7 +7,7 @@ Ce guide résume ce qu'il faut savoir pour compiler et diffuser Balamo, en parti
 | Sujet | État actuel |
 | --- | --- |
 | Plateforme | Android 7.0 (API 24) et plus. iOS prévu, pas encore fait |
-| Identifiant | `com.balamo.app` (`android/app/build.gradle.kts`) |
+| Identifiant | `fr.balamo.game` (`android/app/build.gradle.kts`) |
 | Version | `1.0.0+1` (`pubspec.yaml`) |
 | Signature de l'APK release | **Clé de debug** : suffisant pour tester, **refusé par le Play Store** |
 | Fichier à distribuer | `build/app/outputs/flutter-apk/app-release.apk` (environ 53 Mo) |
@@ -132,7 +132,7 @@ Fichier généré : `build/app/outputs/bundle/release/app-release.aab`.
 
 Avant la première publication :
 
-- **Change l'identifiant** `com.balamo.app` pour un identifiant basé sur un nom de domaine qui t'appartient (par exemple `fr.mondomaine.balamo`). Il ne pourra plus être modifié une fois l'application publiée. Il se règle dans `applicationId` et `namespace` (`android/app/build.gradle.kts`), puis dans l'arborescence du code Android si elle y fait référence.
+- **L'identifiant `fr.balamo.game` doit rester celui saisi dans la Play Console** : il ne pourra plus être modifié une fois le premier bundle envoyé, et un identifiant différent fait refuser l'upload. Il est défini dans `applicationId` et `namespace` (`android/app/build.gradle.kts`), dans le `package` de `MainActivity.kt` (dossier `android/app/src/main/kotlin/fr/balamo/game/`) et dans `PRODUCT_BUNDLE_IDENTIFIER` côté iOS.
 - Prévois la fiche du store : description, captures (le dossier `docs/captures/` en contient), icône, politique de confidentialité. Le jeu fonctionne hors ligne, sans compte ni publicité.
 
 ## 8. Fichiers locaux à ne pas versionner
@@ -166,4 +166,4 @@ Ces fichiers sont propres à la machine ou secrets. Ils sont couverts par le `.g
 - [ ] Numéro de build (`+N`) incrémenté dans `pubspec.yaml`
 - [ ] APK compilé avec `flutter build apk --release`
 - [ ] Testé sur un vrai téléphone (le VPS ne peut pas lancer l'application)
-- [ ] Pour le Play Store : clé de signature personnelle, identifiant changé, `.aab` généré
+- [ ] Pour le Play Store : clé de signature personnelle, identifiant identique à la Play Console (`fr.balamo.game`), `.aab` généré

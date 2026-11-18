@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.balamo.app"
+    namespace = "fr.balamo.game"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,7 +17,7 @@ android {
     defaultConfig {
         // Identifiant unique de l'application (à faire correspondre à un nom de
         // domaine que tu possèdes avant une publication sur le Play Store).
-        applicationId = "com.balamo.app"
+        applicationId = "fr.balamo.game"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
