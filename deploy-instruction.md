@@ -9,8 +9,9 @@ Ce guide résume ce qu'il faut savoir pour compiler et diffuser Balamo, en parti
 | Plateforme | Android 7.0 (API 24) et plus. iOS prévu, pas encore fait |
 | Identifiant | `fr.balamo.game` (`android/app/build.gradle.kts`) |
 | Version | `1.0.0+1` (`pubspec.yaml`) |
-| Signature de l'APK release | **Clé de debug** : suffisant pour tester, **refusé par le Play Store** |
-| Fichier à distribuer | `build/app/outputs/flutter-apk/app-release.apk` (environ 53 Mo) |
+| Signature release | Clé d'envoi `~/balamo-upload.jks` (alias `upload`), configurée via `android/key.properties` |
+| Fichier pour le Play Store | `build/app/outputs/bundle/release/app-release.aab` (environ 52 Mo) |
+| Fichier pour tester sur un téléphone | `build/app/outputs/flutter-apk/app-release.apk` (environ 53 Mo) |
 
 ## 1. Préparer l'environnement (VPS)
 
@@ -82,53 +83,51 @@ version: 1.0.0+1
 ```
 
 - `1.0.0` : nom de version affiché.
-- `+1` : numéro de build interne. Il doit **augmenter à chaque APK distribué**, sinon Android refuse la mise à jour.
+- `+1` : numéro de build interne. Il doit **augmenter à chaque `.aab` ou APK distribué**, sinon Android refuse la mise à jour.
 
-Ou à la compilation : `flutter build apk --release --build-name=1.0.1 --build-number=2`.
+Ou à la compilation : `flutter build appbundle --release --build-name=1.0.1 --build-number=2`.
 
-## 6. Signature : à faire avant une diffusion large
+## 6. Signature
 
-L'APK release est actuellement signé avec la **clé de debug** de la machine qui compile (`signingConfig = signingConfigs.getByName("debug")` dans `android/app/build.gradle.kts`).
+La signature de publication est **déjà en place** :
 
-C'est suffisant pour tester et partager à quelques personnes, mais :
+- le magasin de clés est `~/balamo-upload.jks` (alias `upload`, hors du dépôt) ;
+- `android/key.properties` contient son chemin et ses mots de passe (fichier ignoré par Git) ;
+- `android/app/build.gradle.kts` lit ce fichier et signe le type `release` avec cette clé. **Sans `android/key.properties`, le build retombe sur la clé de debug**, que le Play Store refuse.
 
-- le Play Store **refuse** cette signature ;
-- deux machines différentes produisent deux signatures différentes : on ne peut pas mettre à jour l'un par l'autre sans désinstaller.
+**Sauvegarde `~/balamo-upload.jks` et `android/key.properties` (qui contient les mots de passe) dans un endroit sûr, hors du VPS.** Sans eux, tu ne peux plus signer de mise à jour de la même façon : il faudrait demander à Google de réinitialiser la clé d'envoi.
 
-Pour une diffusion durable, crée ta propre clé **une seule fois** :
+Vérifier avec quelle clé un fichier est signé :
 
-1. Générer le magasin de clés :
+```bash
+keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab     # .aab
+~/development/android-sdk/build-tools/36.0.0/apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk   # .apk
+```
 
-   ```bash
-   keytool -genkey -v -keystore ~/balamo-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias balamo
-   ```
+Le propriétaire doit être `CN=Balamo, C=FR` (et non `Android Debug`). Empreinte SHA-256 du certificat d'envoi :
 
-   **Sauvegarde le fichier `.jks` et ses mots de passe dans un endroit sûr, hors du dépôt.** Si tu les perds, tu ne pourras plus jamais publier de mise à jour de l'application.
+```
+94:50:1A:29:AE:19:63:36:F8:A4:85:94:08:F6:43:8D:E2:FC:2F:92:EC:0B:AC:B5:9F:2C:05:84:22:4B:C3:C3
+```
 
-2. Créer `android/key.properties` :
+Sur une autre machine, copie `balamo-upload.jks`, recrée `android/key.properties` (modèle ci-dessous) en adaptant `storeFile`, puis compile.
 
-   ```properties
-   storePassword=<mot de passe du magasin>
-   keyPassword=<mot de passe de la clé>
-   keyAlias=balamo
-   storeFile=/home/yohann/balamo-release.jks
-   ```
-
-3. Charger ce fichier et l'utiliser pour le type `release` dans `android/app/build.gradle.kts` : le code exact est dans [`docs/03-build-apk.md`](docs/03-build-apk.md#signature--à-lire-avant-de-diffuser-largement).
-
-4. Recompiler avec `flutter build apk --release`.
-
-`android/key.properties`, `*.jks` et `*.keystore` sont dans le `.gitignore` : **ne les commit jamais et ne les partage jamais**.
+```properties
+storePassword=<mot de passe du magasin>
+keyPassword=<mot de passe de la clé>
+keyAlias=upload
+storeFile=/chemin/vers/balamo-upload.jks
+```
 
 ## 7. Publier sur le Play Store
 
-Le Play Store attend un *App Bundle*, signé avec ta propre clé (étape 6) :
+Le Play Store n'accepte plus les APK pour une nouvelle application : il attend un *App Bundle* (`.aab`), signé avec ta clé d'envoi (étape 6) :
 
 ```bash
 flutter build appbundle --release
 ```
 
-Fichier généré : `build/app/outputs/bundle/release/app-release.aab`.
+Fichier généré : `build/app/outputs/bundle/release/app-release.aab`. Envoie-le dans la Play Console (Tests, Test interne ou Production, Créer une version). Accepte Play App Signing si on te le propose : ta clé devient la clé d'envoi et Google signe l'application distribuée.
 
 Avant la première publication :
 
@@ -166,4 +165,4 @@ Ces fichiers sont propres à la machine ou secrets. Ils sont couverts par le `.g
 - [ ] Numéro de build (`+N`) incrémenté dans `pubspec.yaml`
 - [ ] APK compilé avec `flutter build apk --release`
 - [ ] Testé sur un vrai téléphone (le VPS ne peut pas lancer l'application)
-- [ ] Pour le Play Store : clé de signature personnelle, identifiant identique à la Play Console (`fr.balamo.game`), `.aab` généré
+- [ ] Pour le Play Store : clé de signature personnelle (`android/key.properties` présent), identifiant identique à la Play Console (`fr.balamo.game`), `.aab` généré

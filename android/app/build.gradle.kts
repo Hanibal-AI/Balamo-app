@@ -1,3 +1,14 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+// Clé de signature de publication : android/key.properties (ignoré par Git).
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKey = keystorePropertiesFile.exists()
+if (hasReleaseKey) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -30,11 +41,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Signé avec la clé de débogage : suffisant pour installer et partager
-            // l'APK. Pour le Play Store, voir docs/03-build-apk.md (« Signature »).
-            signingConfig = signingConfigs.getByName("debug")
+            // Avec android/key.properties : signé avec la clé de publication
+            // (requis par le Play Store). Sans ce fichier : clé de débogage,
+            // suffisante pour tester mais refusée par le Play Store.
+            signingConfig = signingConfigs.getByName(if (hasReleaseKey) "release" else "debug")
         }
     }
 }
