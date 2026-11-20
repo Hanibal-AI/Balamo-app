@@ -63,6 +63,34 @@ jobs:
             echo "storeFile=$RUNNER_TEMP/balamo-upload.jks"
           } > android/key.properties
 
+      # Échoue tout de suite, avec un message clair, si le secret ne contient pas le bon keystore.
+      - name: Contrôler le keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          # Empreinte SHA-256 publique du certificat d'envoi (visible aussi dans la Play Console).
+          EXPECTED_SHA256: '94:50:1A:29:AE:19:63:36:F8:A4:85:94:08:F6:43:8D:E2:FC:2F:92:EC:0B:AC:B5:9F:2C:05:84:22:4B:C3:C3'
+        run: |
+          KS="$RUNNER_TEMP/balamo-upload.jks"
+          echo "Taille du keystore décodé : $(stat -c%s "$KS") octets (attendu : 2584)"
+          if ! keytool -list -keystore "$KS" -storepass "$KEYSTORE_PASSWORD" > "$RUNNER_TEMP/keystore-list.txt" 2>&1; then
+            cat "$RUNNER_TEMP/keystore-list.txt"
+            echo "Keystore illisible : secret ANDROID_KEYSTORE_BASE64 tronqué ou ANDROID_KEYSTORE_PASSWORD incorrect." >&2
+            exit 1
+          fi
+          grep -E 'Keystore type|contains' "$RUNNER_TEMP/keystore-list.txt"
+          if ! keytool -list -keystore "$KS" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" > "$RUNNER_TEMP/alias.txt" 2>&1; then
+            echo "L'alias du secret ANDROID_KEY_ALIAS est introuvable dans ce keystore (voir la liste ci-dessus)." >&2
+            exit 1
+          fi
+          FINGERPRINT="$(grep -m1 'SHA-256' "$RUNNER_TEMP/alias.txt" | sed 's/^[^:]*: *//')"
+          echo "Empreinte SHA-256 : $FINGERPRINT"
+          if [ "$FINGERPRINT" != "$EXPECTED_SHA256" ]; then
+            echo "Ce keystore n'est pas celui de la clé d'envoi (empreinte différente)." >&2
+            exit 1
+          fi
+          echo "Keystore conforme."
+
       - name: Compiler l'App Bundle
         run: flutter build appbundle --release
 
