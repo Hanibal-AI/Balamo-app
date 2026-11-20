@@ -15,7 +15,7 @@
 | **Joueurs** | 1 |
 | **Connexion** | Aucune : le jeu fonctionne hors ligne, sans compte et sans publicité |
 | **Contenu** | 104 mots à jouer, chacun avec sa définition et son histoire |
-| **Version** | 1.0.0, en phase de test (APK Android, pas encore publié sur un store) |
+| **Version** | 1.0.1, en phase de test (Android, publication sur le Play Store en cours) |
 
 ## Le principe
 
@@ -36,9 +36,9 @@ Chaque mot trouvé livre alors son sens et son histoire : d'où il vient, par qu
 
 | Niveau | Le pari | Particularité | Points |
 | --- | --- | --- | --- |
-| **Facile** | Oui ou non | Des indices sont disponibles | × 1 |
-| **Intermédiaire** | Oui ou non, puis combien | Pas d'indice | × 2 |
-| **Expert** | Oui ou non, puis combien | 90 secondes pour tout trouver | × 3 |
+| **Facile** | Oui ou non | Indices disponibles (−5 points chacun) | × 1 |
+| **Intermédiaire** | Oui ou non, puis combien | Indices disponibles (−10 points chacun) | × 2 |
+| **Expert** | Oui ou non, puis combien | 90 secondes pour tout trouver, indices disponibles (−15 points chacun) | × 3 |
 
 ## Le score
 

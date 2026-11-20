@@ -96,10 +96,10 @@ L'accueil et la feuille « Règles et points » lisent ces valeurs : ils se mett
 
 #### Comment fonctionnent les indices
 
-En niveau facile, le bouton **Indice** dévoile une lettre de plus de chaque anagramme restante (jamais la dernière). Chaque indice coûte `coutIndice` × multiplicateur, soit **5 points**, retirés du score sur-le-champ :
+Dans les trois niveaux, le bouton **Indice** dévoile une lettre de plus de chaque anagramme restante (jamais la dernière). Chaque indice coûte `coutIndice` × multiplicateur du niveau, soit **5 points en facile, 10 en intermédiaire et 15 en expert**, retirés du score sur-le-champ :
 
 - trois indices coûtent autant qu'une anagramme rapporte (15) ;
-- l'indice **s'achète** : avec moins de 5 points, il est refusé (le score ne devient jamais négatif, et on ne peut pas se servir gratuitement en début de partie) ;
+- l'indice **s'achète** : sans assez de points pour son coût, il est refusé (le score ne devient jamais négatif, et on ne peut pas se servir gratuitement en début de partie) ;
 - le bilan indique le nombre d'indices utilisés et les points de la manche, indices déduits ;
 - le record retient le meilleur score atteint.
 

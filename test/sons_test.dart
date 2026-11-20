@@ -239,6 +239,8 @@ void main() {
       await tester.pumpWidget(BalamoApp(partie: partie, reglagesAudio: reglages));
 
       await tester.scrollUntilVisible(find.text('Musique'), 200);
+      await tester.ensureVisible(find.text('Musique'));
+      await tester.pump();
       await tester.tap(find.text('Musique'));
       await tester.pump();
       expect(reglages.musique, isFalse);

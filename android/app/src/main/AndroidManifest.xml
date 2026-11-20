@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- L'activité est verrouillée en portrait (screenOrientation) : sans cette
+         déclaration, le Play Store en déduit que l'écran portrait est une
+         exigence matérielle et masque l'app sur les appareils qui ne
+         l'annoncent pas (tablettes, Chromebooks, etc.). -->
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+
     <application
         android:label="Balamo"
         android:name="${applicationName}"

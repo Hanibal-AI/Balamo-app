@@ -152,8 +152,8 @@ void main() {
     await tester.tap(find.text('Valider le pari'));
     await tester.pumpAndSettle();
     expect(partie.score, 60);
-    expect(find.textContaining('Indice', findRichText: true), findsNothing,
-        reason: 'pas d\'indice à ce niveau');
+    expect(find.textContaining('Indice −10', findRichText: true), findsOneWidget,
+        reason: 'un indice coûte 5 × 2 points en intermédiaire');
   });
 
   testWidgets('le bilan liste les manches et rouvre l\'histoire d\'un mot', (tester) async {

@@ -28,10 +28,6 @@ class _Regles extends StatelessWidget {
         .where((n) => n.demandeCombien)
         .map((n) => n.libelle.toLowerCase())
         .join(', ');
-    final avecIndice = Niveau.values
-        .where((n) => n.indiceDisponible)
-        .map((n) => n.libelle.toLowerCase())
-        .join(', ');
 
     final bareme = <(String, String)>[
       ('Bon pari oui / non', '+${Regles.pointsBonPari}'),
@@ -39,7 +35,7 @@ class _Regles extends StatelessWidget {
       ("Bon nombre d'anagrammes ($avecCombien)", '+${Regles.pointsBonNombre}'),
       ('Chaque anagramme trouvée', '+${Regles.pointsAnagramme}'),
       ('Toutes trouvées', '+${Regles.pointsToutesTrouvees}'),
-      ('Chaque indice demandé ($avecIndice)', '−${Regles.coutIndice}'),
+      ('Chaque indice demandé', '−${Regles.coutIndice}'),
     ];
 
     return SingleChildScrollView(

@@ -157,9 +157,8 @@ class _CarteNiveau extends StatelessWidget {
         niveau.demandeCombien
             ? 'Pari oui / non, puis combien'
             : 'Pari oui / non seulement',
-        if (niveau.aChrono)
-          '${niveau.chronoSecondes} secondes pour chercher'
-        else if (niveau.indiceDisponible)
+        if (niveau.aChrono) '${niveau.chronoSecondes} secondes pour chercher',
+        if (niveau.indiceDisponible)
           'Bouton indice (−${Regles.coutIndice * niveau.multiplicateur} points)'
         else
           'Sans indice',

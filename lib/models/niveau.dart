@@ -16,7 +16,7 @@ enum Niveau {
     libelle: 'Intermédiaire',
     multiplicateur: 2,
     demandeCombien: true,
-    indiceDisponible: false,
+    indiceDisponible: true,
     chronoSecondes: 0,
   ),
   expert(
@@ -24,7 +24,7 @@ enum Niveau {
     libelle: 'Expert',
     multiplicateur: 3,
     demandeCombien: true,
-    indiceDisponible: false,
+    indiceDisponible: true,
     chronoSecondes: 90,
   );
 

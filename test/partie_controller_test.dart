@@ -263,7 +263,7 @@ void main() {
       expect(stockage.lireRecord(Niveau.facile, 5), 25);
     });
 
-    test('pas de bouton indice en intermédiaire ni en expert', () {
+    test('en intermédiaire et en expert, un indice coûte 5 × le multiplicateur', () {
       for (final niveau in [Niveau.intermediaire, Niveau.expert]) {
         final partie = creerPartie(donneesDeTest(niveau: niveau), niveau: niveau)
           ..commencerPartie();
@@ -271,11 +271,15 @@ void main() {
           ..choisirPari(true)
           ..choisirNombre(2)
           ..validerPari();
-        expect(partie.indicePropose, isFalse);
+        expect(partie.indicePropose, isTrue);
+        final cout = Regles.coutIndice * niveau.multiplicateur;
+        expect(partie.coutIndice, cout);
         final score = partie.score;
+        expect(score, greaterThanOrEqualTo(cout), reason: 'assez de points');
+
         partie.demanderIndice();
-        expect(partie.score, score);
-        expect(partie.indices, 0);
+        expect(partie.indices, 1);
+        expect(partie.score, score - cout);
         partie.dispose();
       }
     });
