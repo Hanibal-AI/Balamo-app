@@ -134,7 +134,34 @@ Avant la première publication :
 - **L'identifiant `fr.balamo.game` doit rester celui saisi dans la Play Console** : il ne pourra plus être modifié une fois le premier bundle envoyé, et un identifiant différent fait refuser l'upload. Il est défini dans `applicationId` et `namespace` (`android/app/build.gradle.kts`), dans le `package` de `MainActivity.kt` (dossier `android/app/src/main/kotlin/fr/balamo/game/`) et dans `PRODUCT_BUNDLE_IDENTIFIER` côté iOS.
 - Prévois la fiche du store : description, captures (le dossier `docs/captures/` en contient), icône, politique de confidentialité. Le jeu fonctionne hors ligne, sans compte ni publicité.
 
-## 8. Fichiers locaux à ne pas versionner
+## 8. Compiler l'`.aab` dans GitHub Actions (à la demande)
+
+Le workflow `.github/workflows/build-aab.yml` compile et signe l'`.aab` sur un serveur GitHub, sans passer par le VPS. Il **ne se lance jamais tout seul** : ni à un commit, ni à un push. Il faut le déclencher à la main.
+
+### Configuration (une seule fois)
+
+Dans le dépôt GitHub : *Settings, Secrets and variables, Actions, New repository secret*. Crée ces 4 secrets :
+
+| Secret | Valeur |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Le keystore encodé : `base64 -w0 ~/balamo-upload.jks` (copie toute la sortie) |
+| `ANDROID_KEYSTORE_PASSWORD` | `storePassword` de `android/key.properties` |
+| `ANDROID_KEY_PASSWORD` | `keyPassword` de `android/key.properties` |
+| `ANDROID_KEY_ALIAS` | `keyAlias` de `android/key.properties` (`upload`) |
+
+Ne colle jamais ces valeurs dans un fichier du dépôt, une issue ou un message.
+
+### Lancer un build
+
+1. Augmente le `+N` de `version:` dans `pubspec.yaml`, commite et pousse.
+2. Sur GitHub : onglet *Actions*, workflow **Build AAB**, *Run workflow*, choisis la branche (`main` par défaut), valide.
+3. Quand le job est vert, ouvre l'exécution et télécharge l'artefact `balamo-aab-<version>` (un zip qui contient `app-release.aab`). Il reste disponible 90 jours.
+
+Le workflow lance `flutter analyze` et `flutter test`, compile avec Flutter 3.50.0 et JDK 21, puis **refuse de continuer** si l'un des secrets manque ou si le bundle est signé avec la clé de debug. La clé de signature est supprimée du serveur à la fin du job.
+
+> Ce workflow n'a pas encore été exécuté sur GitHub : le premier lancement peut demander un ajustement.
+
+## 9. Fichiers locaux à ne pas versionner
 
 Ces fichiers sont propres à la machine ou secrets. Ils sont couverts par le `.gitignore` :
 
@@ -147,7 +174,7 @@ Ces fichiers sont propres à la machine ou secrets. Ils sont couverts par le `.g
 
 `android/gradle.properties` doit, lui, rester dans le dépôt : il règle Gradle pour le projet.
 
-## 9. En cas de problème
+## 10. En cas de problème
 
 | Symptôme | Piste |
 | --- | --- |
