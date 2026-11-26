@@ -78,7 +78,7 @@ Les niveaux se règlent dans [`lib/models/niveau.dart`](lib/models/niveau.dart),
 
 ## Mots des niveaux
 
-Les mots viennent des CSV « base de production C1 à C5 » (`docs/informations/C1-C5-words/`) : seules les lignes qui ont un « Niveau attribué » sont jouées. Après les avoir modifiés :
+Les mots viennent des CSV « base de production C1 à C5 » (`docs/informations/C1-C5-words/`). Chaque mot est proposé à tous les niveaux qui l'admettent : longueur, degré et nombre d'anagrammes (réglés dans `lib/models/niveau.dart`). Sont écartés les séries avec bonus, les mots sensibles et les lignes au statut « Rejeté ». Après avoir modifié les CSV ou ces critères :
 
 ```bash
 dart run tool/importer_mastergrid.dart

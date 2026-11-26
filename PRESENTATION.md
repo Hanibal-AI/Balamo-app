@@ -14,7 +14,7 @@
 | **Durée d'une partie** | 5 mots, soit quelques minutes |
 | **Joueurs** | 1 |
 | **Connexion** | Aucune : le jeu fonctionne hors ligne, sans compte et sans publicité |
-| **Contenu** | 153 mots à jouer, répartis sur 10 niveaux ; définitions et histoires pour une petite partie d'entre eux à ce jour |
+| **Contenu** | Environ 69 000 mots à jouer, répartis sur 10 niveaux ; définitions et histoires pour une petite partie d'entre eux à ce jour |
 | **Version** | 1.0.1, en phase de test (Android, publication sur le Play Store en cours) |
 
 ## Le principe

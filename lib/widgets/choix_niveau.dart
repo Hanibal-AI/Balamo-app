@@ -282,13 +282,11 @@ class _FicheNiveau extends StatelessWidget {
 
   final Niveau niveau;
 
-  List<String> _lignes(Iterable<int> longueurs) {
-    final min = longueurs.reduce((a, b) => a < b ? a : b);
-    final max = longueurs.reduce((a, b) => a > b ? a : b);
+  List<String> get _lignes {
     final pieges = niveau.pieges;
     final indices = niveau.indicesMax;
     return [
-      '${Regles.motsParPartie} mots de ${min == max ? '$min' : '$min à $max'} lettres, '
+      '${Regles.motsParPartie} mots de ${niveau.lettresMin} à ${niveau.lettresMax} lettres, '
           '${pieges == 0 ? 'sans piège' : 'dont $pieges piège${pieges > 1 ? 's' : ''}'}',
       niveau.demandeCombien
           ? 'Pari oui / non, puis combien'
@@ -307,9 +305,7 @@ class _FicheNiveau extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final partie = context.watch<PartieController>();
     final c = context.couleurs;
-    final longueurs = partie.donnees.lot(niveau).map((m) => m.tuiles.length);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 14, 12),
       decoration: BoxDecoration(
@@ -338,15 +334,14 @@ class _FicheNiveau extends StatelessWidget {
           const SizedBox(height: 4),
           Text(niveau.titre, style: Typo.titre(23, couleur: c.encre)),
           const SizedBox(height: 6),
-          if (longueurs.isNotEmpty)
-            for (final ligne in _lignes(longueurs))
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Text(
-                  '•  $ligne',
-                  style: Typo.ui(15.5, couleur: c.encreDouce, hauteur: 1.3),
-                ),
+          for (final ligne in _lignes)
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Text(
+                '•  $ligne',
+                style: Typo.ui(15.5, couleur: c.encreDouce, hauteur: 1.3),
               ),
+            ),
         ],
       ),
     );

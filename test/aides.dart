@@ -27,14 +27,27 @@ Mot _mot(String lemme) => Mot(
       fiche: const Fiche(enUnePhrase: '', origine: '', aRetenir: '', sources: '', etapes: []),
     );
 
+/// Données dont tous les mots sont proposés, quel que soit le niveau : les
+/// tests choisissent librement leurs mots.
+class DonneesDeTest extends DonneesJeu {
+  DonneesDeTest({
+    required super.genere,
+    required super.mots,
+    required super.orthographes,
+    required super.partie,
+  });
+
+  @override
+  List<EntreePartie> lot(Niveau niveau) => partie;
+}
+
 /// Petit jeu de données maîtrisé : un seul mot par niveau, pour des tests
 /// dont on connaît d'avance le déroulement.
 DonneesJeu donneesDeTest({
   String tuiles = 'TROUPE',
   List<String> anagrammes = const ['POUTRE', 'TOUPER'],
-  Niveau niveau = Niveau.n1,
 }) =>
-    DonneesJeu(
+    DonneesDeTest(
       genere: 'test',
       mots: {'Mot': _mot(tuiles.toLowerCase())},
       orthographes: {
@@ -42,7 +55,7 @@ DonneesJeu donneesDeTest({
           o: [Lecture(forme: o.toLowerCase(), note: 'Mot')],
       },
       partie: [
-        EntreePartie(tuiles: tuiles, anagrammes: anagrammes, niveau: niveau),
+        EntreePartie(tuiles: tuiles, anagrammes: anagrammes),
       ],
     );
 

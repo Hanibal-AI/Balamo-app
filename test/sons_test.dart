@@ -21,7 +21,7 @@ import 'polices.dart';
 }) {
   final entendus = <Retour>[];
   final partie = creerPartie(
-    donneesDeTest(niveau: niveau, anagrammes: anagrammes),
+    donneesDeTest(anagrammes: anagrammes),
     niveau: niveau,
     horloge: horloge,
   )..surRetour = entendus.add;

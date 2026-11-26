@@ -17,7 +17,7 @@ import '../test/aides.dart';
 import '../test/polices.dart';
 
 /// Les données réelles, réduites à un seul mot jouable pour choisir la scène.
-DonneesJeu _avecSeulement(DonneesJeu d, String tuiles) => DonneesJeu(
+DonneesJeu _avecSeulement(DonneesJeu d, String tuiles) => DonneesDeTest(
       genere: d.genere,
       mots: d.mots,
       orthographes: d.orthographes,
@@ -141,7 +141,7 @@ void main() {
   });
 
   testWidgets('mot piège', (tester) async {
-    final piege = donnees.partie.firstWhere((p) => p.niveau == Niveau.n2 && p.estPiege);
+    final piege = donnees.lot(Niveau.n2).firstWhere((p) => p.estPiege);
     final partie = await lancer(tester, mot: piege.tuiles, niveau: Niveau.n2);
     partie
       ..commencerPartie()
@@ -184,13 +184,14 @@ void main() {
 
   testWidgets('petit écran, mot long', (tester) async {
     // Le plus long mot jouable qui ait des anagrammes.
-    final long = donnees.partie
+    final long = donnees
+        .lot(Niveau.n10)
         .where((p) => !p.estPiege)
         .reduce((a, b) => b.tuiles.length > a.tuiles.length ? b : a);
     final partie = await lancer(
       tester,
       mot: long.tuiles,
-      niveau: long.niveau,
+      niveau: Niveau.n10,
       largeur: 320,
       hauteur: 568,
     );

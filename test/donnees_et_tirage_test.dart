@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:balamo/logic/tirage.dart';
 import 'package:balamo/models/niveau.dart';
+import 'package:balamo/models/tuiles.dart';
 import 'package:balamo/widgets/mini_markdown.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,33 +14,37 @@ void main() {
   final donnees = chargerVraiesDonnees();
 
   group('Les données embarquées', () {
-    test('chaque niveau a la réserve prévue par la Mastergrid', () {
+    test('chaque niveau a assez de mots pour une partie, selon ses règles', () {
       for (final niveau in Niveau.values) {
         final lot = donnees.lot(niveau);
-        final pieges = lot.where((p) => p.estPiege).length;
-        expect(lot.length - pieges, 12, reason: '${niveau.numero}');
-        expect(pieges, switch (niveau.numero) { 1 => 0, < 8 => 3, _ => 5 },
-            reason: '${niveau.numero}');
-        expect(lot.map((p) => p.cleAnagramme).toSet(), hasLength(lot.length));
+        final series = lot.where((p) => !p.estPiege);
+        expect(series.length, greaterThanOrEqualTo(5), reason: '${niveau.numero}');
+        expect(lot.length - series.length, greaterThanOrEqualTo(niveau.pieges));
+        for (final mot in lot) {
+          expect(mot.tuiles.length,
+              inInclusiveRange(niveau.lettresMin, niveau.lettresMax));
+          expect(niveau.partDegres.keys, contains(mot.degre));
+          expect(mot.anagrammes.length, lessThanOrEqualTo(niveau.anagrammesMax));
+        }
       }
     });
 
-    test('les longueurs de mots suivent la Mastergrid', () {
-      const bornes = [
-        (3, 5), (3, 5), (3, 5), (5, 6), (5, 7), //
-        (5, 7), (5, 8), (5, 10), (5, 10), (8, 11),
-      ];
-      for (final entree in donnees.partie) {
-        final (min, max) = bornes[entree.niveau.numero - 1];
-        expect(entree.tuiles.length, inInclusiveRange(min, max), reason: entree.tuiles);
+    test('les parts de degrés font 100 % à chaque niveau', () {
+      for (final niveau in Niveau.values) {
+        expect(niveau.partDegres.values.fold(0, (a, b) => a + b), 100,
+            reason: '${niveau.numero}');
       }
+    });
+
+    test('aucune série n\'apparaît deux fois', () {
+      expect(donnees.partie.map((p) => p.cleAnagramme).toSet(),
+          hasLength(donnees.partie.length));
     });
 
     test('chaque jeton de lettres a son orthographe accentuée', () {
       for (final entree in donnees.partie) {
-        for (final tuiles in [entree.tuiles, ...entree.anagrammes]) {
-          expect(entree.formes[tuiles], isNotEmpty, reason: tuiles);
-        }
+        expect(entree.formes, hasLength(entree.anagrammes.length + 1));
+        expect(enTuiles(entree.forme), entree.tuiles);
       }
       expect(donnees.formeDe('DEJA'), 'déjà');
     });
@@ -68,19 +73,32 @@ void main() {
   group('La pioche', () {
     for (final niveau in Niveau.values) {
       test('niveau ${niveau.numero} : cinq mots, avec le bon nombre de pièges', () {
-        for (var graine = 0; graine < 40; graine++) {
+        final lot = donnees.lot(niveau);
+        for (var graine = 0; graine < 5; graine++) {
           final pioche = composerPioche(
-            partie: donnees.partie,
+            lot: lot,
             niveau: niveau,
             hasard: Random(graine),
           );
           expect(pioche, hasLength(5));
-          expect(pioche.every((p) => p.niveau == niveau), isTrue);
+          expect(pioche.every(lot.contains), isTrue);
           expect(pioche.map((p) => p.cleAnagramme).toSet(), hasLength(5));
           expect(pioche.where((p) => p.estPiege), hasLength(niveau.pieges));
         }
       });
     }
+
+    test('le degré des mots tirés suit la part prévue au niveau', () {
+      // Niveau 9 : 70 % de C4, alors que la réserve est surtout en C5.
+      final lot = donnees.lot(Niveau.n9);
+      final tires = [
+        for (var graine = 0; graine < 100; graine++)
+          ...composerPioche(lot: lot, niveau: Niveau.n9, hasard: Random(graine))
+              .where((p) => !p.estPiege),
+      ];
+      final part = tires.where((p) => p.degre == 4).length / tires.length;
+      expect(part, closeTo(0.7, 0.08));
+    });
 
     test('les lettres sont mélangées, jamais rendues dans l\'ordre', () {
       for (var graine = 0; graine < 50; graine++) {

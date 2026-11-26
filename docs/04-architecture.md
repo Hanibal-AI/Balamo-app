@@ -145,7 +145,7 @@ Les choix faits pour que le son reste agréable sur la durée :
 
 ### …les mots du jeu
 
-Les mots joués sont dans `assets/donnees/mastergrid.json`, fabriqué par `dart run tool/importer_mastergrid.dart` à partir des CSV « base de production C1 à C5 » (lignes avec un « Niveau attribué »).
+Les mots joués sont dans `assets/donnees/mastergrid.json`, fabriqué par `dart run tool/importer_mastergrid.dart` à partir des CSV « base de production C1 à C5 ». Il range les mots par degré, chacun suivi de ses anagrammes ; `Niveau.admet` décide à quels niveaux un mot est proposé.
 
 Le dictionnaire (définitions et étymologies) est dans `assets/donnees/balamo.json`. Un mot sans entrée reste jouable : la révélation indique qu'il n'en a pas encore. La rubrique `partie` de ce fichier n'est plus jouée.
 
@@ -161,7 +161,7 @@ Si tu régénères le prototype HTML depuis ta base de notes, l'outil d'import e
 dart run tool/importer_donnees.dart "chemin/vers/Le ForMika, anagrammes.html"
 ```
 
-Puis `flutter test` : `test/donnees_et_tirage_test.dart` vérifie la cohérence des deux fichiers (anagrammes valides, réserve de chaque niveau).
+Puis `flutter test` : `test/donnees_et_tirage_test.dart` vérifie la cohérence des deux fichiers (anagrammes valides, assez de mots par niveau).
 
 ## Le trajet d'un geste, pas à pas
 

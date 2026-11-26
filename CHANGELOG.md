@@ -24,7 +24,8 @@ Pas encore envoyé.
 - Les trois niveaux (facile, intermédiaire, expert) laissent place à 10 niveaux, en deux catégories : entraînement (1, 2, 4, 5, 7, 8) et compétition (3, 6, 9, 10).
 - Nouvel accueil : deux carrés Entraînement et Compétition, et une barre des niveaux.
 - Une partie compte toujours 5 mots (le choix 5 ou 10 manches disparaît).
-- Nouveaux mots : les 153 mots de la Mastergrid remplacent les 104 précédents. La plupart n'ont pas encore de définition ni d'étymologie.
+- Nouveaux mots : environ 69 000 mots issus des listes C1 à C5 remplacent les 104 précédents. La plupart n'ont pas encore de définition ni d'étymologie.
+- Le tirage respecte les longueurs, les degrés et le nombre d'anagrammes de chaque niveau.
 - Pièges, prix et nombre d'indices, chrono et multiplicateur propres à chaque niveau.
 - Les records des anciens niveaux ne sont pas repris.
 

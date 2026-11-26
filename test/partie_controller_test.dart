@@ -56,7 +56,7 @@ void main() {
 
     test('intermédiaire : il faut dire combien ; le bon nombre rapporte +20, le tout ×2', () {
       final partie = creerPartie(
-        donneesDeTest(niveau: Niveau.n4),
+        donneesDeTest(),
         niveau: Niveau.n4,
       )..commencerPartie();
       partie.choisirPari(true);
@@ -70,7 +70,7 @@ void main() {
 
     test('un mauvais nombre ne rapporte que le pari', () {
       final partie = creerPartie(
-        donneesDeTest(niveau: Niveau.n4),
+        donneesDeTest(),
         niveau: Niveau.n4,
       )..commencerPartie();
       partie
@@ -267,7 +267,7 @@ void main() {
     test('le prix et le nombre d\'indices suivent le niveau', () {
       for (final niveau in [Niveau.n4, Niveau.n5, Niveau.n10]) {
         final partie = creerPartie(
-          donneesDeTest(niveau: niveau, anagrammes: const ['POUTRE']),
+          donneesDeTest(anagrammes: const ['POUTRE']),
           niveau: niveau,
         )..commencerPartie();
         partie
@@ -294,7 +294,7 @@ void main() {
       fakeAsync((async) {
         final horloge = HorlogeDeTest();
         final partie = creerPartie(
-          donneesDeTest(niveau: Niveau.n3),
+          donneesDeTest(),
           niveau: Niveau.n3,
           horloge: horloge,
         )..commencerPartie();
@@ -324,7 +324,7 @@ void main() {
 
     test('trouver le mot ×3 au niveau 9', () {
       final partie = creerPartie(
-        donneesDeTest(niveau: Niveau.n9, anagrammes: const ['POUTRE']),
+        donneesDeTest(anagrammes: const ['POUTRE']),
         niveau: Niveau.n9,
       )..commencerPartie();
       partie
@@ -385,7 +385,7 @@ void main() {
     test('quitter ramène à l\'accueil et arrête le chrono', () {
       fakeAsync((async) {
         final partie = creerPartie(
-          donneesDeTest(niveau: Niveau.n9),
+          donneesDeTest(),
           niveau: Niveau.n9,
           horloge: HorlogeDeTest(),
         )..commencerPartie();
@@ -465,7 +465,7 @@ void main() {
         (Niveau.n1, null),
       ]) {
         final horloge = HorlogeDeTest();
-        final partie = creerPartie(donneesDeTest(niveau: niveau),
+        final partie = creerPartie(donneesDeTest(),
             niveau: niveau, horloge: horloge)
           ..commencerPartie()
           ..choisirPari(true)

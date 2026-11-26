@@ -214,7 +214,7 @@ class PartieController extends ChangeNotifier {
   void commencerPartie() {
     _annulerMinuteries();
     _pioche = composerPioche(
-      partie: donnees.partie,
+      lot: donnees.lot(_niveau),
       niveau: _niveau,
       hasard: _hasard,
     );

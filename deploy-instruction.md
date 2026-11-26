@@ -41,7 +41,7 @@ flutter analyze
 flutter test
 ```
 
-Les trois doivent passer (aucun problème, 61 tests verts) avant de distribuer une version.
+Les trois doivent passer (aucun problème, 63 tests verts) avant de distribuer une version.
 
 ## 3. Compiler l'APK
 

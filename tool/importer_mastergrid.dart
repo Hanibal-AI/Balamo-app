@@ -1,6 +1,7 @@
-// Fabrique les réserves de mots des dix niveaux à partir des CSV « base de
-// production C1 à C5 » : seules les lignes avec un « Niveau attribué » sont
-// retenues.
+// Fabrique le fichier des mots joués à partir des CSV « base de production
+// C1 à C5 ». Sont retenus tous les mots qu'au moins un niveau admet (voir
+// `Niveau.admet`), sauf les « séries avec bonus » (la Mastergrid ne retient que
+// des séries pures), les mots sensibles et les lignes au statut « Rejeté ».
 //
 //     dart run tool/importer_mastergrid.dart [dossier des CSV]
 //
@@ -8,18 +9,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:balamo/models/niveau.dart';
+import 'package:balamo/models/tuiles.dart';
+
 const _dossierParDefaut = 'docs/informations/C1-C5-words';
 const _sortie = 'assets/donnees/mastergrid.json';
 
 /// « Anagramme 1 » à « Anagramme 6 » : les réponses demandées au joueur.
 const _anagrammesParLigne = 6;
 
-/// Lettres accentuées et ligatures, ramenées à ce qui est écrit sur les jetons.
-const _sansAccent = {
-  'À': 'A', 'Â': 'A', 'Ä': 'A', 'Ç': 'C', 'É': 'E', 'È': 'E', 'Ê': 'E',
-  'Ë': 'E', 'Î': 'I', 'Ï': 'I', 'Ô': 'O', 'Ö': 'O', 'Ù': 'U', 'Û': 'U',
-  'Ü': 'U', 'Ÿ': 'Y', 'Œ': 'OE', 'Æ': 'AE',
-};
+final _nomDeFichier = RegExp(r'C([1-5])\.csv$');
 
 void main(List<String> arguments) {
   final dossier = Directory(arguments.isEmpty ? _dossierParDefaut : arguments.first);
@@ -32,46 +31,63 @@ void main(List<String> arguments) {
   final fichiers = dossier
       .listSync()
       .whereType<File>()
-      .where((f) => RegExp(r'C[1-5]\.csv$').hasMatch(f.path))
+      .where((f) => _nomDeFichier.hasMatch(f.path))
       .toList()
     ..sort((a, b) => a.path.compareTo(b.path));
 
-  final mots = <Map<String, Object>>[];
+  // Les mots par degré, chacun suivi de ses anagrammes.
+  final degres = <String, List<List<String>>>{};
+  final parNiveau = {for (final n in Niveau.values) n: (series: 0, pieges: 0)};
   for (final fichier in fichiers) {
+    final degre = int.parse(_nomDeFichier.firstMatch(fichier.path)!.group(1)!);
     final lignes = _lireCsv(fichier.readAsStringSync());
     final colonnes = lignes.first;
     for (final valeurs in lignes.skip(1)) {
       final ligne = Map.fromIterables(colonnes, valeurs);
-      final niveau = int.tryParse(ligne['Niveau attribué']!.trim());
-      if (niveau == null) continue;
+      if (_ecartee(ligne)) continue;
 
       final mot = ligne['Mot à afficher']!;
-      final anagrammes = [
+      final anagrammes = int.tryParse(ligne['Nb d\'anagrammes']!) ?? 0;
+      final niveaux = Niveau.values.where((n) => n.admet(
+            lettres: enTuiles(mot).length,
+            degre: degre,
+            anagrammes: anagrammes,
+          ));
+      if (niveaux.isEmpty) continue;
+
+      for (final n in niveaux) {
+        final (:series, :pieges) = parNiveau[n]!;
+        parNiveau[n] = anagrammes == 0
+            ? (series: series, pieges: pieges + 1)
+            : (series: series + 1, pieges: pieges);
+      }
+      degres.putIfAbsent('$degre', () => []).add([
+        mot,
         for (var i = 1; i <= _anagrammesParLigne; i++)
           if (ligne['Anagramme $i']!.isNotEmpty) ligne['Anagramme $i']!,
-      ];
-      mots.add({
-        'niveau': niveau,
-        'tuiles': _tuiles(mot),
-        'anagrammes': anagrammes.map(_tuiles).toList(),
-        // Orthographe accentuée de chaque jeu de jetons.
-        'formes': {for (final forme in [mot, ...anagrammes]) _tuiles(forme): forme},
-      });
+      ]);
     }
   }
-  if (mots.isEmpty) {
-    stderr.writeln('Aucun mot avec un « Niveau attribué » dans ${dossier.path}.');
+  if (degres.isEmpty) {
+    stderr.writeln('Aucun mot jouable dans ${dossier.path}.');
     exitCode = 65;
     return;
   }
-  mots.sort((a, b) => (a['niveau']! as int).compareTo(b['niveau']! as int));
 
-  File(_sortie).writeAsStringSync(jsonEncode({'mots': mots}));
-  stdout.writeln('$_sortie : ${mots.length} mots. Lance maintenant « flutter test ».');
+  File(_sortie).writeAsStringSync(jsonEncode({'degres': degres}));
+  final total = degres.values.fold(0, (somme, lot) => somme + lot.length);
+  stdout.writeln('$_sortie : $total mots différents.');
+  for (final MapEntry(key: n, value: lot) in parNiveau.entries) {
+    stdout.writeln('Niveau ${n.numero} : ${lot.series} à anagrammes, '
+        '${lot.pieges} pièges, ${lot.series + lot.pieges} au total.');
+  }
+  stdout.writeln('Lance maintenant « flutter test ».');
 }
 
-String _tuiles(String mot) =>
-    mot.toUpperCase().split('').map((l) => _sansAccent[l] ?? l).join();
+bool _ecartee(Map<String, String> ligne) =>
+    ligne['Catégorie'] == 'Série avec bonus' ||
+    ligne['Mot sensible']!.isNotEmpty ||
+    ligne['Statut'] == 'Rejeté';
 
 /// Lecture d'un CSV : champs entre guillemets, virgules et retours à la ligne.
 List<List<String>> _lireCsv(String texte) {

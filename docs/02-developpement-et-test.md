@@ -88,7 +88,7 @@ Les tests n'ont besoin ni de téléphone ni d'émulateur. Ils couvrent :
 | Fichier | Ce qui est vérifié |
 | --- | --- |
 | `test/partie_controller_test.dart` | Les règles : pari, barème et multiplicateurs, anagrammes trouvées/refusées, **coût des indices**, chrono des compétitions, déblocage des niveaux, records, enchaînement des manches. |
-| `test/donnees_et_tirage_test.dart` | Le fichier de mots (chaque anagramme utilise bien les lettres du mot, chaque mot a sa définition), la composition des parties (un piège sur quatre, jamais deux mots du même groupe) et l'affichage des fiches étymologiques. |
+| `test/donnees_et_tirage_test.dart` | Le fichier de mots (chaque anagramme utilise bien les lettres du mot, chaque niveau a assez de mots), la composition des parties (pièges et degrés prévus par niveau, jamais deux mots du même groupe) et l'affichage des fiches étymologiques. |
 | `test/sons_test.dart` | Chaque action signale bien son événement sonore (jeton posé, mélange, indice, tic du chrono…), tous les fichiers audio existent, et les interrupteurs Sons / Musique sont mémorisés. |
 | `test/parcours_test.dart` | L'interface réelle, pilotée comme au doigt : une manche complète, le glisser-déposer des jetons, le bilan, et l'absence de débordement sur un petit écran. |
 

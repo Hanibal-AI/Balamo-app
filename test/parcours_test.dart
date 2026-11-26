@@ -137,7 +137,7 @@ void main() {
   testWidgets('niveau 4 : le pari demande combien', (tester) async {
     tailleTelephone(tester);
     final partie = creerPartie(
-      donneesDeTest(niveau: Niveau.n4),
+      donneesDeTest(),
       niveau: Niveau.n4,
     );
     addTearDown(partie.dispose);
@@ -189,7 +189,6 @@ void main() {
       donneesDeTest(
         tuiles: 'ANTIMATIERE',
         anagrammes: const ['TAMINERAIET'],
-        niveau: Niveau.n10,
       ),
       niveau: Niveau.n10,
     );
