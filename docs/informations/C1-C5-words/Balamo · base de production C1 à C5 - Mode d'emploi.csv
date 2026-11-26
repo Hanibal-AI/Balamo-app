@@ -1,0 +1,17 @@
+Balamo · base de production C1 à C5,
+,
+Une ligne,"Un alphagramme, donc une manche de jeu. Aucun alphagramme n'apparaît deux fois dans le fichier."
+À remplir,"Seulement les colonnes jaunes : Statut, Niveau attribué, Commentaire. Exemple : Validé, 4, « bon mot pour découvrir Combien ? »."
+Alphagramme,"Les lettres du mot, sans accents, en ordre alphabétique."
+Mot à afficher,Proposé parmi les mots de la série : forme de base et fréquence d'abord. Les 120 séries de la Mastergrid gardent le mot choisi.
+Anagramme 1 à 6,"Réponses demandées au joueur, de la plus fréquente à la plus rare. Au-delà de six : « Anagrammes suivantes »."
+Bonus,Formes valides plus difficiles que le degré : le jeu doit les accepter sans les demander.
+Catégorie,Série pure : aucun bonus. Série avec bonus. Piège : aucune anagramme connue. Il n'y a pas de piège C5.
+Fréquence,"Emplois du mot affiché, par million, moyenne films et livres (Lexique 3.83). 0 : jamais relevé."
+Niveaux possibles,"Niveaux de la Mastergrid dont la longueur, le degré et le nombre d'anagrammes conviennent. Vide : aucun."
+Niveau attribué,"Prérempli pour les 153 mots de la Mastergrid, avec le commentaire « Mastergrid »."
+Mot sensible,"Repérage par une courte liste, incomplète : à relire."
+Tuiles,"Le mot en capitales sans accents, comme dans le fichier de données du jeu."
+Identifiant,Numéro propre à cette version. À conserver si tu ajoutes ou retires des lignes.
+Ordre,"Séries pures, séries avec bonus, pièges ; dans chaque groupe, mots affichés les plus fréquents d'abord. En C5, les mots affichés relevés dans Lexique viennent en premier."
+Sources,"Morphalou 3.1 (ATILF, licence LGPL-LR) et Lexique 3.83. Méthode de classement : balamo_lexique.xlsx, onglet « Lisez-moi »."

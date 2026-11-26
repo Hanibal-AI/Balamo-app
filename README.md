@@ -28,6 +28,16 @@ flutter build apk --release
 
 L'APK se trouve ensuite dans `build/app/outputs/flutter-apk/app-release.apk`.
 
+## Versions
+
+L'historique est dans [`CHANGELOG.md`](CHANGELOG.md).
+
+**À chaque nouvelle version, avant de compiler :**
+
+1. Dans [`pubspec.yaml`](pubspec.yaml), augmenter le code de version (le `+N` de `version:`) et, si besoin, changer le nom de version.
+2. Dans [`CHANGELOG.md`](CHANGELOG.md), ajouter la version (nom, code, changements) et mettre à jour le tableau des états du Play Store.
+3. Reporter le nouveau numéro dans [`deploy-instruction.md`](deploy-instruction.md) et, si le nom change, dans [`PRESENTATION.md`](PRESENTATION.md).
+
 ## Documentation
 
 | Guide | Contenu |

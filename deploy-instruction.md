@@ -8,7 +8,7 @@ Ce guide résume ce qu'il faut savoir pour compiler et diffuser Balamo, en parti
 | --- | --- |
 | Plateforme | Android 7.0 (API 24) et plus. iOS prévu, pas encore fait |
 | Identifiant | `fr.balamo.game` (`android/app/build.gradle.kts`) |
-| Version | `1.0.1+2` (`pubspec.yaml`) |
+| Version | `1.0.1+3` (`pubspec.yaml`) |
 | Signature release | Clé d'envoi `~/balamo-upload.jks` (alias `upload`), configurée via `android/key.properties` |
 | Fichier pour le Play Store | `build/app/outputs/bundle/release/app-release.aab` (environ 52 Mo) |
 | Fichier pour tester sur un téléphone | `build/app/outputs/flutter-apk/app-release.apk` (environ 53 Mo) |
@@ -79,13 +79,13 @@ Si une version signée différemment est déjà installée (APK debug, ou APK co
 Dans `pubspec.yaml` :
 
 ```yaml
-version: 1.0.1+2
+version: 1.0.1+3
 ```
 
 - `1.0.1` : nom de version affiché.
-- `+1` : numéro de build interne. Il doit **augmenter à chaque `.aab` ou APK distribué**, sinon Android refuse la mise à jour.
+- `+3` : numéro de build interne. Il doit **augmenter à chaque `.aab` ou APK distribué**, sinon Android refuse la mise à jour.
 
-Ou à la compilation : `flutter build appbundle --release --build-name=1.0.1 --build-number=2`.
+Ou à la compilation : `flutter build appbundle --release --build-name=1.0.1 --build-number=3`.
 
 ## 6. Signature
 
