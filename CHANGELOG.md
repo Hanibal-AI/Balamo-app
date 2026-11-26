@@ -19,6 +19,22 @@ Les deux se règlent dans `pubspec.yaml` (`version: nom+code`).
 
 Pas encore envoyé.
 
+### Notes de version pour le Play Store
+
+À coller dans la Play Console (500 caractères maximum).
+
+```text
+<fr-FR>
+• 10 niveaux au lieu de 3, répartis entre Entraînement et Compétition.
+• Nouvel accueil avec une barre de progression des niveaux.
+• Niveaux à débloquer en atteignant un objectif de score.
+• Compétition chronométrée, avec ton temps affiché au bilan.
+• Des milliers de nouveaux mots (définitions ajoutées progressivement).
+• Les parties comptent désormais 5 mots.
+Attention : tout le monde repart au niveau 1 et les anciens records sont remis à zéro.
+</fr-FR>
+```
+
 ### Modifié
 
 - Les trois niveaux (facile, intermédiaire, expert) laissent place à 10 niveaux, en deux catégories : entraînement (1, 2, 4, 5, 7, 8) et compétition (3, 6, 9, 10).
