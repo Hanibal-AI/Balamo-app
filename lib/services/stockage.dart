@@ -2,15 +2,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/niveau.dart';
 
-/// Ce que l'application garde d'une session à l'autre : les records
-/// (un par niveau et par longueur de partie) et les derniers réglages choisis.
+/// Ce que l'application garde d'une session à l'autre : les records (un par
+/// niveau), le plus haut niveau débloqué et les derniers réglages choisis.
 abstract class Stockage {
-  int lireRecord(Niveau niveau, int manches);
-  Future<void> ecrireRecord(Niveau niveau, int manches, int valeur);
+  int lireRecord(Niveau niveau);
+  Future<void> ecrireRecord(Niveau niveau, int valeur);
 
   Niveau? get dernierNiveau;
-  int? get dernieresManches;
-  Future<void> memoriserChoix(Niveau niveau, int manches);
+  Future<void> memoriserNiveau(Niveau niveau);
+
+  /// Numéro du plus haut niveau accessible (1 au départ).
+  int get niveauDebloque;
+  Future<void> ecrireNiveauDebloque(int numero);
 
   /// Réglages oui / non (sons, musique…).
   bool lireReglage(String cle, {required bool parDefaut});
@@ -26,16 +29,14 @@ class StockagePreferences implements Stockage {
   static Future<StockagePreferences> ouvrir() async =>
       StockagePreferences(await SharedPreferences.getInstance());
 
-  static String _cle(Niveau niveau, int manches) =>
-      'balamo-record-${niveau.name}-$manches';
+  static String _cle(Niveau niveau) => 'balamo-record-${niveau.name}';
 
   @override
-  int lireRecord(Niveau niveau, int manches) =>
-      _prefs.getInt(_cle(niveau, manches)) ?? 0;
+  int lireRecord(Niveau niveau) => _prefs.getInt(_cle(niveau)) ?? 0;
 
   @override
-  Future<void> ecrireRecord(Niveau niveau, int manches, int valeur) =>
-      _prefs.setInt(_cle(niveau, manches), valeur);
+  Future<void> ecrireRecord(Niveau niveau, int valeur) =>
+      _prefs.setInt(_cle(niveau), valeur);
 
   @override
   Niveau? get dernierNiveau {
@@ -47,13 +48,15 @@ class StockagePreferences implements Stockage {
   }
 
   @override
-  int? get dernieresManches => _prefs.getInt('balamo-manches');
+  Future<void> memoriserNiveau(Niveau niveau) =>
+      _prefs.setString('balamo-niveau', niveau.name);
 
   @override
-  Future<void> memoriserChoix(Niveau niveau, int manches) async {
-    await _prefs.setString('balamo-niveau', niveau.name);
-    await _prefs.setInt('balamo-manches', manches);
-  }
+  int get niveauDebloque => _prefs.getInt('balamo-niveau-debloque') ?? 1;
+
+  @override
+  Future<void> ecrireNiveauDebloque(int numero) =>
+      _prefs.setInt('balamo-niveau-debloque', numero);
 
   @override
   bool lireReglage(String cle, {required bool parDefaut}) =>
@@ -66,27 +69,32 @@ class StockagePreferences implements Stockage {
 
 /// Stockage en mémoire, pour les tests (rien n'est conservé).
 class StockageMemoire implements Stockage {
-  final Map<String, int> _records = {};
+  StockageMemoire({this.niveauDebloque = 1});
+
+  final Map<Niveau, int> _records = {};
 
   @override
   Niveau? dernierNiveau;
 
   @override
-  int? dernieresManches;
+  int niveauDebloque;
 
   @override
-  int lireRecord(Niveau niveau, int manches) =>
-      _records['${niveau.name}-$manches'] ?? 0;
+  int lireRecord(Niveau niveau) => _records[niveau] ?? 0;
 
   @override
-  Future<void> ecrireRecord(Niveau niveau, int manches, int valeur) async {
-    _records['${niveau.name}-$manches'] = valeur;
+  Future<void> ecrireRecord(Niveau niveau, int valeur) async {
+    _records[niveau] = valeur;
   }
 
   @override
-  Future<void> memoriserChoix(Niveau niveau, int manches) async {
+  Future<void> memoriserNiveau(Niveau niveau) async {
     dernierNiveau = niveau;
-    dernieresManches = manches;
+  }
+
+  @override
+  Future<void> ecrireNiveauDebloque(int numero) async {
+    niveauDebloque = numero;
   }
 
   final Map<String, bool> _reglages = {};

@@ -43,15 +43,20 @@ class Revelation extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: Text(
-                "Aucune anagramme. Voici l'histoire du mot.",
+                sens.isEmpty
+                    ? 'Aucune anagramme.'
+                    : "Aucune anagramme. Voici l'histoire du mot.",
                 style: Typo.texte(18, couleur: c.encreDouce, italique: true, hauteur: 1.35),
               ),
             ),
-          if (sens.isEmpty)
+          if (sens.isEmpty) ...[
+            Text(donnees.formeDe(orthographe), style: Typo.titre(32, couleur: c.encre)),
+            const SizedBox(height: 8),
             Text(
               "Ce mot n'a pas encore d'entrée dans le dictionnaire.",
               style: Typo.texte(18, couleur: c.encreDouce, italique: true, hauteur: 1.35),
             ),
+          ],
           for (var i = 0; i < sens.length; i++) ...[
             if (i > 0) const SizedBox(height: 26),
             _Sens(sens: sens[i]),

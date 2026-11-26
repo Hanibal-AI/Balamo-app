@@ -14,6 +14,20 @@ Future<void> montrerRegles(BuildContext context) => showModalBottomSheet<void>(
       builder: (context) => const _Regles(),
     );
 
+/// Regroupe les niveaux qui partagent une valeur : « ×1 aux niveaux 1 à 3, … ».
+String _parValeur(String Function(Niveau) valeur) {
+  final groupes = <String, List<int>>{};
+  for (final n in Niveau.values) {
+    groupes.putIfAbsent(valeur(n), () => []).add(n.numero);
+  }
+  return groupes.entries.map((g) {
+    final niveaux = g.value.length > 1
+        ? '${g.value.first} à ${g.value.last}'
+        : '${g.value.first}';
+    return '${g.key} ${g.value.length > 1 ? 'aux niveaux' : 'au niveau'} $niveaux';
+  }).join(', ');
+}
+
 class _Regles extends StatelessWidget {
   const _Regles();
 
@@ -21,21 +35,22 @@ class _Regles extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.couleurs;
     final corps = Typo.ui(16.5, couleur: c.encre, hauteur: 1.45);
-    final multiplicateurs = Niveau.values
-        .map((n) => '${n.multiplicateur} en ${n.libelle.toLowerCase()}')
+    final multiplicateurs = _parValeur((n) => '×${n.multiplicateur}');
+    final prixIndices = _parValeur((n) => '${n.prixIndice} points');
+    final chronos = Niveau.values
+        .where((n) => n.aChrono)
+        .map((n) => '${n.chronoSecondes} s au niveau ${n.numero}')
         .join(', ');
-    final avecCombien = Niveau.values
-        .where((n) => n.demandeCombien)
-        .map((n) => n.libelle.toLowerCase())
-        .join(', ');
+    final premierCombien =
+        Niveau.values.firstWhere((n) => n.demandeCombien).numero;
 
     final bareme = <(String, String)>[
       ('Bon pari oui / non', '+${Regles.pointsBonPari}'),
       ('Bon « non » sur un mot piège', '+${Regles.pointsBonPiege}'),
-      ("Bon nombre d'anagrammes ($avecCombien)", '+${Regles.pointsBonNombre}'),
+      ("Bon nombre d'anagrammes (dès le niveau $premierCombien)",
+          '+${Regles.pointsBonNombre}'),
       ('Chaque anagramme trouvée', '+${Regles.pointsAnagramme}'),
       ('Toutes trouvées', '+${Regles.pointsToutesTrouvees}'),
-      ('Chaque indice demandé', '−${Regles.coutIndice}'),
     ];
 
     return SingleChildScrollView(
@@ -52,7 +67,8 @@ class _Regles extends StatelessWidget {
             style: corps,
           ),
           const SizedBox(height: 12),
-          Text('Barème de base, multiplié par $multiplicateurs :', style: corps),
+          Text('Barème de base, multiplié selon le niveau : $multiplicateurs.',
+              style: corps),
           const SizedBox(height: 6),
           for (final (libelle, points) in bareme)
             Container(
@@ -75,7 +91,21 @@ class _Regles extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             'Un indice dévoile une lettre de plus de chaque anagramme restante. '
-            "Il s'achète avec les points déjà gagnés : sans assez de points, pas d'indice.",
+            "Il s'achète avec les points déjà gagnés : sans assez de points, pas d'indice. "
+            'Prix : $prixIndices. Leur nombre par mot diminue aux niveaux élevés.',
+            style: corps,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Compétition : la recherche de chaque mot est chronométrée ($chronos). '
+            'Ton temps est affiché au bilan.',
+            style: corps,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Une partie compte ${Regles.motsParPartie} mots. Atteins '
+            "l'objectif, une part du meilleur score possible sans indice, pour "
+            'débloquer le niveau suivant.',
             style: corps,
           ),
           const SizedBox(height: 12),

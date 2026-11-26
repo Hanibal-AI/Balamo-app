@@ -70,11 +70,10 @@ class PartieController extends ChangeNotifier {
   })  : _stockage = stockage,
         _hasard = hasard ?? Random(),
         _horloge = horloge ?? DateTime.now {
-    _niveau = stockage.dernierNiveau ?? Niveau.facile;
-    final manches = stockage.dernieresManches;
-    _totalManches =
-        Regles.longueursDePartie.contains(manches) ? manches! : Regles.longueursDePartie.first;
-    _record = _stockage.lireRecord(_niveau, _totalManches);
+    _niveauDebloque = stockage.niveauDebloque;
+    final dernier = stockage.dernierNiveau ?? Niveau.n1;
+    _niveau = estDebloque(dernier) ? dernier : Niveau.n1;
+    _record = _stockage.lireRecord(_niveau);
   }
 
   final DonneesJeu donnees;
@@ -88,29 +87,29 @@ class PartieController extends ChangeNotifier {
   // ---------------------------------------------------------------- réglages
 
   late Niveau _niveau;
-  late int _totalManches;
+  late int _niveauDebloque;
 
   Niveau get niveau => _niveau;
-  int get totalManches => _totalManches;
+  int get totalManches => Regles.motsParPartie;
+
+  /// Le joueur a-t-il accès à ce niveau ?
+  bool estDebloque(Niveau niveau) => niveau.numero <= _niveauDebloque;
 
   void choisirNiveau(Niveau niveau) {
-    if (_niveau == niveau) return;
+    if (_niveau == niveau || !estDebloque(niveau)) return;
     _niveau = niveau;
     surRetour?.call(Retour.choix);
-    _apresChoix();
-  }
-
-  void choisirTotalManches(int total) {
-    if (_totalManches == total) return;
-    _totalManches = total;
-    surRetour?.call(Retour.choix);
-    _apresChoix();
-  }
-
-  void _apresChoix() {
-    _record = _stockage.lireRecord(_niveau, _totalManches);
-    unawaited(_stockage.memoriserChoix(_niveau, _totalManches));
+    _record = _stockage.lireRecord(_niveau);
+    unawaited(_stockage.memoriserNiveau(_niveau));
     notifyListeners();
+  }
+
+  /// Choisit le plus haut niveau accessible d'une catégorie.
+  void choisirCategorie(Categorie categorie) {
+    if (_niveau.categorie == categorie) return;
+    final accessibles = Niveau.values
+        .where((n) => n.categorie == categorie && estDebloque(n));
+    if (accessibles.isNotEmpty) choisirNiveau(accessibles.last);
   }
 
   // ------------------------------------------------------------------- partie
@@ -120,6 +119,8 @@ class PartieController extends ChangeNotifier {
   int _manche = 0;
   int _record = 0;
   int _recordAvantPartie = 0;
+  int _objectif = 0;
+  Niveau? _niveauGagne;
   List<EntreePartie> _pioche = [];
   List<BilanManche> _journal = [];
 
@@ -127,14 +128,26 @@ class PartieController extends ChangeNotifier {
   int get score => _score;
   int get manche => _manche;
 
-  /// Meilleur score atteint pour ce niveau et cette longueur de partie.
+  /// Meilleur score atteint pour ce niveau.
   int get record => _record;
 
   /// Record à battre au début de la partie en cours.
   int get recordAvantPartie => _recordAvantPartie;
   bool get nouveauRecord => _record > _recordAvantPartie;
+
+  /// Score à atteindre pour débloquer le niveau suivant, calculé sur les mots
+  /// réellement tirés.
+  int get objectif => _objectif;
+  bool get objectifAtteint => _score >= _objectif;
+
+  /// Niveau débloqué par la partie qui vient de se terminer, s'il y en a un.
+  Niveau? get niveauGagne => _niveauGagne;
+
+  /// Temps de recherche cumulé de la partie (niveaux de compétition).
+  Duration get tempsTotal => _journal.fold(
+      Duration.zero, (total, m) => total + (m.duree ?? Duration.zero));
   List<BilanManche> get journal => List.unmodifiable(_journal);
-  bool get derniereManche => _manche >= _totalManches;
+  bool get derniereManche => _manche >= totalManches;
 
   // ------------------------------------------------------------------- manche
 
@@ -203,17 +216,39 @@ class PartieController extends ChangeNotifier {
     _pioche = composerPioche(
       partie: donnees.partie,
       niveau: _niveau,
-      total: _totalManches,
       hasard: _hasard,
     );
+    _objectif = _calculerObjectif();
+    _niveauGagne = null;
     _score = 0;
     _manche = 0;
     _journal = [];
-    _record = _stockage.lireRecord(_niveau, _totalManches);
+    _record = _stockage.lireRecord(_niveau);
     _recordAvantPartie = _record;
     _vue = Vue.jeu;
     surRetour?.call(Retour.debutDePartie);
     _nouvelleManche();
+  }
+
+  int _calculerObjectif() {
+    final base = _pioche.fold(
+      0,
+      (total, mot) =>
+          total +
+          Regles.pointsMaximum(mot.anagrammes.length,
+              demandeCombien: _niveau.demandeCombien),
+    );
+    return (base * _niveau.multiplicateur * _niveau.objectifPourcent / 100)
+        .ceil();
+  }
+
+  void _debloquerLeSuivant() {
+    if (!objectifAtteint || _niveau.numero >= Niveau.values.length) return;
+    final suivant = Niveau.depuisNumero(_niveau.numero + 1);
+    if (estDebloque(suivant)) return;
+    _niveauDebloque = suivant.numero;
+    _niveauGagne = suivant;
+    unawaited(_stockage.ecrireNiveauDebloque(_niveauDebloque));
   }
 
   void _nouvelleManche() {
@@ -235,8 +270,7 @@ class PartieController extends ChangeNotifier {
     _orthographeRevelee = null;
     _revelationPiege = false;
     _journal.add(BilanManche(
-      note: mot.note,
-      lemme: donnees.motDe(mot)?.lemme ?? mot.note,
+      lemme: mot.forme,
       tuiles: mot.tuiles,
       total: mot.anagrammes.length,
     ));
@@ -248,6 +282,7 @@ class PartieController extends ChangeNotifier {
     if (!finie) return;
     if (derniereManche) {
       _annulerMinuteries();
+      _debloquerLeSuivant();
       _vue = Vue.bilan;
       surRetour?.call(nouveauRecord ? Retour.nouveauRecord : Retour.bilan);
       notifyListeners();
@@ -261,7 +296,7 @@ class PartieController extends ChangeNotifier {
     _annulerMinuteries();
     surRetour?.call(_vue == Vue.jeu ? Retour.quitter : Retour.bouton);
     _vue = Vue.accueil;
-    _record = _stockage.lireRecord(_niveau, _totalManches);
+    _record = _stockage.lireRecord(_niveau);
     notifyListeners();
   }
 
@@ -339,7 +374,10 @@ class PartieController extends ChangeNotifier {
     _chevalet = [
       for (var i = 0; i < lettres.length; i++) Jeton(id: i, lettre: lettres[i]),
     ];
-    if (_niveau.aChrono) _lancerChrono(_niveau.chronoSecondes);
+    if (_niveau.aChrono) {
+      _debutRecherche = _horloge();
+      _lancerChrono(_niveau.chronoSecondes);
+    }
   }
 
   /// Un appui sur un jeton l'envoie sur le plateau, ou le renvoie au chevalet.
@@ -471,15 +509,18 @@ class PartieController extends ChangeNotifier {
   // ------------------------------------------------------------------ indices
 
   /// Coût d'un indice pour le niveau en cours.
-  int get coutIndice => Regles.coutIndice * _niveau.multiplicateur;
+  int get coutIndice => _niveau.prixIndice;
 
   /// Le bouton « Indice » est-il proposé ?
-  bool get indicePropose =>
-      _niveau.indiceDisponible && _phase == Phase.recherche;
+  bool get indicePropose => _phase == Phase.recherche;
 
-  /// Toutes les lettres dévoilables le sont déjà (on garde la dernière cachée).
-  bool get indicesEpuises =>
-      aUneManche && _indices >= courant.tuiles.length - 1;
+  /// Plus d'indice pour ce mot : le quota du niveau est atteint, ou il ne
+  /// reste que la dernière lettre, toujours cachée.
+  bool get indicesEpuises {
+    if (!aUneManche) return false;
+    final lettres = courant.tuiles.length - 1;
+    return _indices >= min(_niveau.indicesMax ?? lettres, lettres);
+  }
 
   bool get indiceAbordable => _score >= coutIndice;
 
@@ -526,11 +567,22 @@ class PartieController extends ChangeNotifier {
   }
 
   void _terminer() {
+    _mesurerLaDuree();
     _phase = Phase.terminee;
     _etatPlateau = EtatPlateau.neutre;
     _annulerMinuteries();
   }
 
+  void _mesurerLaDuree() {
+    final debut = _debutRecherche;
+    if (debut == null) return;
+    final ecoule = _horloge().difference(debut);
+    final limite = Duration(seconds: _niveau.chronoSecondes);
+    _journal.last.duree = ecoule > limite ? limite : ecoule;
+    _debutRecherche = null;
+  }
+
+  DateTime? _debutRecherche;
   Timer? _minuteur;
   Timer? _retourJetons;
   DateTime? _finChrono;
@@ -567,6 +619,7 @@ class PartieController extends ChangeNotifier {
   }
 
   void _annulerMinuteries() {
+    _debutRecherche = null;
     _minuteur?.cancel();
     _minuteur = null;
     _finChrono = null;
@@ -584,7 +637,7 @@ class PartieController extends ChangeNotifier {
     if (_journal.isNotEmpty) _journal.last.points += n;
     if (_score > _record) {
       _record = _score;
-      unawaited(_stockage.ecrireRecord(_niveau, _totalManches, _record));
+      unawaited(_stockage.ecrireRecord(_niveau, _record));
     }
   }
 

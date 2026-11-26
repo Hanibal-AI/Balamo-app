@@ -93,6 +93,8 @@ class _EcranJeuState extends State<EcranJeu> {
 
     final c = context.couleurs;
     final mot = partie.donnees.motDe(partie.courant);
+    // La nature n'est affichée que si l'entrée est celle de ce mot précis.
+    final nature = mot?.lemme == partie.courant.forme ? mot!.nature : '';
     final enPari = partie.phase == Phase.pari;
     final revelee = partie.orthographeRevelee;
 
@@ -139,13 +141,13 @@ class _EcranJeuState extends State<EcranJeu> {
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
               style: Typo.titre(enPari ? 52 : 36, couleur: c.encre, hauteur: 1.05),
-              child: Text(mot?.lemme ?? partie.courant.note),
+              child: Text(partie.courant.forme),
             ),
-            if ((mot?.nature ?? '').isNotEmpty)
+            if (nature.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  mot!.nature,
+                  nature,
                   style: Typo.texte(18.5, couleur: c.encreDouce, italique: true, hauteur: 1.3),
                 ),
               ),

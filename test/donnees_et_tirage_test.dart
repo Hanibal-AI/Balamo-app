@@ -13,20 +13,35 @@ void main() {
   final donnees = chargerVraiesDonnees();
 
   group('Les données embarquées', () {
-    test('chaque niveau a des mots, dont des pièges', () {
+    test('chaque niveau a la réserve prévue par la Mastergrid', () {
       for (final niveau in Niveau.values) {
-        expect(donnees.nombreDeMots(niveau), greaterThan(10), reason: niveau.libelle);
-        expect(donnees.nombreDePieges(niveau), greaterThan(0), reason: niveau.libelle);
+        final lot = donnees.lot(niveau);
+        final pieges = lot.where((p) => p.estPiege).length;
+        expect(lot.length - pieges, 12, reason: '${niveau.numero}');
+        expect(pieges, switch (niveau.numero) { 1 => 0, < 8 => 3, _ => 5 },
+            reason: '${niveau.numero}');
+        expect(lot.map((p) => p.cleAnagramme).toSet(), hasLength(lot.length));
       }
     });
 
-    test('chaque mot jouable a son entrée de dictionnaire', () {
+    test('les longueurs de mots suivent la Mastergrid', () {
+      const bornes = [
+        (3, 5), (3, 5), (3, 5), (5, 6), (5, 7), //
+        (5, 7), (5, 8), (5, 10), (5, 10), (8, 11),
+      ];
       for (final entree in donnees.partie) {
-        final mot = donnees.motDe(entree);
-        expect(mot, isNotNull, reason: entree.note);
-        expect(mot!.lemme, isNotEmpty);
-        expect(mot.definition, isNotEmpty, reason: entree.note);
+        final (min, max) = bornes[entree.niveau.numero - 1];
+        expect(entree.tuiles.length, inInclusiveRange(min, max), reason: entree.tuiles);
       }
+    });
+
+    test('chaque jeton de lettres a son orthographe accentuée', () {
+      for (final entree in donnees.partie) {
+        for (final tuiles in [entree.tuiles, ...entree.anagrammes]) {
+          expect(entree.formes[tuiles], isNotEmpty, reason: tuiles);
+        }
+      }
+      expect(donnees.formeDe('DEJA'), 'déjà');
     });
 
     test('chaque anagramme utilise exactement les lettres du mot, sans être le mot', () {
@@ -36,14 +51,6 @@ void main() {
         for (final anagramme in entree.anagrammes) {
           expect(_cle(anagramme), _cle(entree.tuiles), reason: '${entree.tuiles} / $anagramme');
           expect(anagramme, isNot(entree.tuiles));
-        }
-      }
-    });
-
-    test('chaque orthographe à révéler a au moins un sens', () {
-      for (final entree in donnees.partie) {
-        for (final orthographe in [entree.tuiles, ...entree.anagrammes]) {
-          expect(donnees.sensDe(orthographe), isNotEmpty, reason: orthographe);
         }
       }
     });
@@ -60,25 +67,19 @@ void main() {
 
   group('La pioche', () {
     for (final niveau in Niveau.values) {
-      for (final total in [5, 10]) {
-        test('${niveau.libelle}, $total manches', () {
-          for (var graine = 0; graine < 40; graine++) {
-            final pioche = composerPioche(
-              partie: donnees.partie,
-              niveau: niveau,
-              total: total,
-              hasard: Random(graine),
-            );
-            expect(pioche, hasLength(total));
-            expect(pioche.every((p) => p.niveau == niveau), isTrue);
-            // Jamais deux mots du même groupe d'anagrammes : l'un donnerait l'autre.
-            expect(pioche.map((p) => p.cleAnagramme).toSet(), hasLength(total));
-            // Environ un piège sur quatre.
-            final pieges = pioche.where((p) => p.estPiege).length;
-            expect(pieges, min((total / 4).round(), donnees.nombreDePieges(niveau)));
-          }
-        });
-      }
+      test('niveau ${niveau.numero} : cinq mots, avec le bon nombre de pièges', () {
+        for (var graine = 0; graine < 40; graine++) {
+          final pioche = composerPioche(
+            partie: donnees.partie,
+            niveau: niveau,
+            hasard: Random(graine),
+          );
+          expect(pioche, hasLength(5));
+          expect(pioche.every((p) => p.niveau == niveau), isTrue);
+          expect(pioche.map((p) => p.cleAnagramme).toSet(), hasLength(5));
+          expect(pioche.where((p) => p.estPiege), hasLength(niveau.pieges));
+        }
+      });
     }
 
     test('les lettres sont mélangées, jamais rendues dans l\'ordre', () {

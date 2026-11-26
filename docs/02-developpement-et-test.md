@@ -73,7 +73,7 @@ Dans VS Code ou Android Studio (avec les extensions Flutter), le Hot Reload se d
 
 À savoir :
 
-- Une modification de `pubspec.yaml`, des polices ou de `assets/donnees/balamo.json` demande d'arrêter puis de relancer `flutter run`.
+- Une modification de `pubspec.yaml`, des polices ou de `assets/donnees/` demande d'arrêter puis de relancer `flutter run`.
 - Une modification des dossiers `android/` ou `ios/` demande une recompilation complète (relancer `flutter run`).
 - Le mode debug est plus lent et plus lourd que la version finale : ne juge pas la fluidité dessus. Pour ça : `flutter run --release` (ou `--profile`).
 
@@ -87,7 +87,7 @@ Les tests n'ont besoin ni de téléphone ni d'émulateur. Ils couvrent :
 
 | Fichier | Ce qui est vérifié |
 | --- | --- |
-| `test/partie_controller_test.dart` | Les règles : pari, barème et multiplicateurs, anagrammes trouvées/refusées, **coût des indices**, chrono du niveau expert, records, enchaînement des manches. |
+| `test/partie_controller_test.dart` | Les règles : pari, barème et multiplicateurs, anagrammes trouvées/refusées, **coût des indices**, chrono des compétitions, déblocage des niveaux, records, enchaînement des manches. |
 | `test/donnees_et_tirage_test.dart` | Le fichier de mots (chaque anagramme utilise bien les lettres du mot, chaque mot a sa définition), la composition des parties (un piège sur quatre, jamais deux mots du même groupe) et l'affichage des fiches étymologiques. |
 | `test/sons_test.dart` | Chaque action signale bien son événement sonore (jeton posé, mélange, indice, tic du chrono…), tous les fichiers audio existent, et les interrupteurs Sons / Musique sont mémorisés. |
 | `test/parcours_test.dart` | L'interface réelle, pilotée comme au doigt : une manche complète, le glisser-déposer des jetons, le bilan, et l'absence de débordement sur un petit écran. |

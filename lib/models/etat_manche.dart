@@ -37,13 +37,11 @@ class Verdict {
 /// Ligne du journal de partie : ce qui s'est passé pendant une manche.
 class BilanManche {
   BilanManche({
-    required this.note,
     required this.lemme,
     required this.tuiles,
     required this.total,
   });
 
-  final String note;
   final String lemme;
   final String tuiles;
 
@@ -60,4 +58,8 @@ class BilanManche {
 
   /// Points de la manche, indices déduits (peut être négatif).
   int points = 0;
+
+  /// Temps de recherche, mesuré dans les niveaux de compétition (`null` en
+  /// entraînement et sur un mot piège).
+  Duration? duree;
 }

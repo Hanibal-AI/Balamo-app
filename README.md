@@ -49,18 +49,44 @@ L'historique est dans [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Règles en bref
 
-Barème de base, multiplié par 1 en facile, 2 en intermédiaire, 3 en expert :
+| Niveau | Catégorie | Lettres | Pièges sur 5 | Pari | Indices par mot, prix | Chrono | Points |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 Premiers pas | Entraînement facile | 3 à 5 | 0 | Oui / non | lettres − 1, 5 | – | × 1 |
+| 2 Premiers pièges | Entraînement facile | 3 à 5 | 1 | Oui / non | lettres − 1, 5 | – | × 1 |
+| 3 Championship I | Compétition facile | 3 à 5 | 1 | Oui / non | lettres − 1, 5 | 90 s | × 1 |
+| 4 Combien ? | Entraînement intermédiaire | 5 à 6 | 1 | + combien | 3, 10 | – | × 2 |
+| 5 L'indice se paie | Entraînement intermédiaire | 5 à 7 | 1 | + combien | 3, 20 | – | × 2 |
+| 6 Championship II | Compétition intermédiaire | 5 à 7 | 1 | + combien | 3, 20 | 90 s | × 2 |
+| 7 Grand format | Entraînement difficile | 5 à 8 | 1 | + combien | 2, 45 | – | × 3 |
+| 8 Très grand format | Entraînement difficile | 5 à 10 | 2 | + combien | 2, 45 | – | × 3 |
+| 9 Championship III | Compétition difficile | 5 à 10 | 2 | + combien | 2, 45 | 75 s | × 3 |
+| 10 Battle royale extrême | Compétition hard | 8 à 11 | 2 | + combien | 1, 100 | 60 s | × 5 |
+
+Une partie compte 5 mots. Atteindre 50 % du meilleur score possible sans indice (60 % aux niveaux 9 et 10) débloque le niveau suivant. En compétition, le temps de recherche de chaque mot est mesuré et affiché au bilan.
+
+Barème de base, multiplié selon le niveau :
 
 | Action | Points |
 | --- | --- |
 | Bon pari oui / non | +10 |
 | Bon « non » sur un mot piège | +30 |
-| Bon nombre d'anagrammes (intermédiaire, expert) | +20 |
+| Bon nombre d'anagrammes (dès le niveau 4) | +20 |
 | Chaque anagramme trouvée | +15 |
 | Toutes trouvées | +10 |
-| Chaque indice demandé (facile) | −5 |
 
-Toutes ces valeurs se règlent dans [`lib/logic/regles.dart`](lib/logic/regles.dart) et [`lib/models/niveau.dart`](lib/models/niveau.dart).
+Les niveaux se règlent dans [`lib/models/niveau.dart`](lib/models/niveau.dart), le barème dans [`lib/logic/regles.dart`](lib/logic/regles.dart).
+
+## Mots des niveaux
+
+Les mots viennent des CSV « base de production C1 à C5 » (`docs/informations/C1-C5-words/`) : seules les lignes qui ont un « Niveau attribué » sont jouées. Après les avoir modifiés :
+
+```bash
+dart run tool/importer_mastergrid.dart
+```
+
+```bash
+flutter test
+```
 
 ## Sons
 

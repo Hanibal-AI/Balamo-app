@@ -4,14 +4,11 @@ import 'niveau.dart';
 /// Un mot proposé en jeu : ses jetons et les anagrammes à retrouver.
 class EntreePartie {
   const EntreePartie({
-    required this.note,
     required this.tuiles,
     required this.anagrammes,
     required this.niveau,
+    this.formes = const {},
   });
-
-  /// Clé de l'entrée de dictionnaire correspondante ([DonneesJeu.mots]).
-  final String note;
 
   /// Les lettres du mot, en capitales sans accents (ex. « TROUPE »).
   final String tuiles;
@@ -21,16 +18,22 @@ class EntreePartie {
 
   final Niveau niveau;
 
+  /// Orthographe accentuée du mot et de ses anagrammes, par jeu de jetons.
+  final Map<String, String> formes;
+
   bool get estPiege => anagrammes.isEmpty;
+
+  /// Le mot tel qu'on l'écrit (ex. « déjà » pour les jetons « DEJA »).
+  String get forme => formes[tuiles] ?? tuiles.toLowerCase();
 
   /// Deux mots de même clé sont anagrammes l'un de l'autre.
   String get cleAnagramme => (tuiles.split('')..sort()).join();
 
   factory EntreePartie.fromJson(Map<String, dynamic> j) => EntreePartie(
-        note: j['note'] as String,
         tuiles: j['tuiles'] as String,
         anagrammes: (j['anagrammes'] as List).cast<String>(),
-        niveau: Niveau.depuisCle(j['niveau'] as String),
+        niveau: Niveau.depuisNumero(j['niveau'] as int),
+        formes: (j['formes'] as Map<String, dynamic>).cast<String, String>(),
       );
 }
 
@@ -60,7 +63,8 @@ class SensRevele {
   final Mot mot;
 }
 
-/// Toutes les données du jeu, chargées depuis `assets/donnees/balamo.json`.
+/// Toutes les données du jeu : le dictionnaire (`assets/donnees/balamo.json`)
+/// et les mots des dix niveaux (`assets/donnees/mastergrid.json`).
 class DonneesJeu {
   const DonneesJeu({
     required this.genere,
@@ -81,15 +85,25 @@ class DonneesJeu {
   /// Les mots jouables.
   final List<EntreePartie> partie;
 
-  Mot? motDe(EntreePartie entree) => mots[entree.note];
+  /// L'entrée de dictionnaire du mot proposé, s'il en a une.
+  Mot? motDe(EntreePartie entree) {
+    for (final sens in sensDe(entree.tuiles)) {
+      return sens.mot;
+    }
+    return null;
+  }
+
+  /// Orthographe accentuée d'un jeu de jetons.
+  String formeDe(String orthographe) {
+    for (final entree in partie) {
+      final forme = entree.formes[orthographe];
+      if (forme != null) return forme;
+    }
+    return orthographe.toLowerCase();
+  }
 
   List<EntreePartie> lot(Niveau niveau) =>
       partie.where((p) => p.niveau == niveau).toList();
-
-  int nombreDeMots(Niveau niveau) => lot(niveau).length;
-
-  int nombreDePieges(Niveau niveau) =>
-      lot(niveau).where((p) => p.estPiege).length;
 
   /// Les sens à afficher pour une orthographe (un par mot du dictionnaire).
   List<SensRevele> sensDe(String orthographe) {
@@ -114,7 +128,11 @@ class DonneesJeu {
     return sens;
   }
 
-  factory DonneesJeu.fromJson(Map<String, dynamic> j) => DonneesJeu(
+  factory DonneesJeu.fromJson(
+    Map<String, dynamic> j,
+    Map<String, dynamic> grille,
+  ) =>
+      DonneesJeu(
         genere: (j['genere'] ?? '') as String,
         mots: (j['mots'] as Map<String, dynamic>).map(
           (cle, v) => MapEntry(cle, Mot.fromJson(v as Map<String, dynamic>)),
@@ -127,7 +145,7 @@ class DonneesJeu {
                 .toList(growable: false),
           ),
         ),
-        partie: (j['partie'] as List)
+        partie: (grille['mots'] as List)
             .map((p) => EntreePartie.fromJson(p as Map<String, dynamic>))
             .toList(growable: false),
       );

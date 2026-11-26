@@ -3,6 +3,7 @@ import 'package:balamo/logic/partie_controller.dart';
 import 'package:balamo/logic/regles.dart';
 import 'package:balamo/models/etat_manche.dart';
 import 'package:balamo/models/niveau.dart';
+import 'package:balamo/services/stockage.dart';
 import 'package:balamo/widgets/jeton_widget.dart';
 import 'package:balamo/widgets/revelation.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,8 +34,10 @@ void main() {
 
     // Accueil.
     expect(find.text('Balamo'), findsOneWidget);
-    expect(find.text('Facile'), findsOneWidget);
-    expect(find.textContaining('Bouton indice (−5 points)'), findsOneWidget);
+    expect(find.text('Entraînement'), findsWidgets);
+    expect(find.text('Compétition'), findsWidgets);
+    expect(find.text('Premiers pas'), findsOneWidget);
+    expect(find.textContaining('Indices à 5 points'), findsOneWidget);
     await tester.tap(find.text('Commencer la partie'));
     await tester.pumpAndSettle();
 
@@ -131,11 +134,11 @@ void main() {
     expect(partie.chevalet.map((j) => j.lettre), contains('T'));
   });
 
-  testWidgets('intermédiaire : le pari demande combien', (tester) async {
+  testWidgets('niveau 4 : le pari demande combien', (tester) async {
     tailleTelephone(tester);
     final partie = creerPartie(
-      donneesDeTest(niveau: Niveau.intermediaire),
-      niveau: Niveau.intermediaire,
+      donneesDeTest(niveau: Niveau.n4),
+      niveau: Niveau.n4,
     );
     addTearDown(partie.dispose);
     await tester.pumpWidget(BalamoApp(partie: partie));
@@ -153,7 +156,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(partie.score, 60);
     expect(find.textContaining('Indice −10', findRichText: true), findsOneWidget,
-        reason: 'un indice coûte 5 × 2 points en intermédiaire');
+        reason: 'un indice coûte 10 points au niveau 4');
   });
 
   testWidgets('le bilan liste les manches et rouvre l\'histoire d\'un mot', (tester) async {
@@ -171,7 +174,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(partie.vue, Vue.bilan);
-    expect(find.textContaining('Bilan · facile · 5 manches'), findsOneWidget);
+    expect(find.textContaining('Bilan · niveau 1 · entraînement facile'), findsOneWidget);
     expect(find.text('Rejouer'), findsOneWidget);
     final premier = partie.journal.first;
     await tester.tap(find.text(premier.lemme));
@@ -186,9 +189,9 @@ void main() {
       donneesDeTest(
         tuiles: 'ANTIMATIERE',
         anagrammes: const ['TAMINERAIET'],
-        niveau: Niveau.expert,
+        niveau: Niveau.n10,
       ),
-      niveau: Niveau.expert,
+      niveau: Niveau.n10,
     );
     addTearDown(partie.dispose);
     await tester.pumpWidget(BalamoApp(partie: partie));
@@ -202,8 +205,30 @@ void main() {
     await tester.tap(find.text('Valider le pari'));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(JetonWidget), findsNWidgets(11));
-    expect(find.text('1:30'), findsOneWidget);
+    expect(find.text('1:00'), findsOneWidget);
     partie.quitter();
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('accueil : les carrés et la barre choisissent le niveau', (tester) async {
+    tailleTelephone(tester, largeur: 320, hauteur: 1200);
+    final partie = creerPartie(chargerVraiesDonnees(),
+        stockage: StockageMemoire(niveauDebloque: 4));
+    addTearDown(partie.dispose);
+    await tester.pumpWidget(BalamoApp(partie: partie));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Compétition').first);
+    await tester.pumpAndSettle();
+    expect(partie.niveau, Niveau.n3);
+    expect(find.textContaining('90 secondes par mot'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('niveau-4')));
+    await tester.pumpAndSettle();
+    expect(partie.niveau, Niveau.n4);
+
+    await tester.tap(find.byKey(const ValueKey('niveau-9')));
+    await tester.pumpAndSettle();
+    expect(partie.niveau, Niveau.n4, reason: 'niveau verrouillé');
   });
 }

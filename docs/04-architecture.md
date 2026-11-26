@@ -29,19 +29,19 @@ lib/
 ├── app.dart                  MaterialApp, thème clair/sombre, aiguillage entre les 3 écrans
 │
 ├── models/                   LES DONNÉES (aucune logique d'affichage)
-│   ├── niveau.dart             Les 3 niveaux et leurs réglages (multiplicateur, chrono, indice)
+│   ├── niveau.dart             Les 10 niveaux et leurs réglages (catégorie, pièges, indices, chrono…)
 │   ├── mot.dart                Entrée de dictionnaire : définition, racines, fiche étymologique
 │   ├── donnees_jeu.dart        Le fichier de mots une fois chargé (mots jouables, anagrammes, sens)
 │   └── etat_manche.dart        Petits types d'état : phase, jeton, verdict, ligne du bilan
 │
 ├── logic/                    LES RÈGLES DU JEU
-│   ├── regles.dart             Barème, coût des indices, valeur des jetons, durées
+│   ├── regles.dart             Barème, mots par partie, valeur des jetons, durées
 │   ├── tirage.dart             Composition d'une partie (pioche, pièges) et mélange des lettres
 │   ├── partie_controller.dart  Déroulé d'une partie : pari → recherche → révélation → bilan
 │   └── reglages_audio.dart     Interrupteurs « Sons » et « Musique » du joueur
 │
 ├── services/                 L'EXTÉRIEUR
-│   ├── depot_donnees.dart      Lecture de assets/donnees/balamo.json
+│   ├── depot_donnees.dart      Lecture des fichiers de assets/donnees/
 │   ├── stockage.dart           Records et réglages mémorisés (SharedPreferences)
 │   ├── audio.dart              Ce que le jeu attend d'un moteur sonore (+ version muette)
 │   └── audio_balamo.dart       Le moteur sonore réel : quel son pour quelle action
@@ -68,7 +68,8 @@ lib/
     └── regles_feuille.dart     La feuille « Règles et points »
 
 assets/
-├── donnees/balamo.json       Tous les mots, anagrammes, définitions et étymologies
+├── donnees/balamo.json       Dictionnaire : définitions et étymologies
+├── donnees/mastergrid.json     Mots et anagrammes des 10 niveaux
 ├── fonts/                    Alegreya, Alegreya Sans, Alegreya Sans SC, Archivo (licence OFL)
 ├── sons/                     Bruitages (.wav) et musique d'ambiance (musique.m4a)
 └── icone/                    Sources de l'icône de l'application
@@ -85,10 +86,8 @@ android/  ios/                Projets natifs générés par Flutter
 | Pour changer | Ouvre | Et modifie |
 | --- | --- | --- |
 | Les points d'un bon pari, d'une anagramme, du bonus | `lib/logic/regles.dart` | `pointsBonPari`, `pointsBonPiege`, `pointsBonNombre`, `pointsAnagramme`, `pointsToutesTrouvees` |
-| **Le coût d'un indice** | `lib/logic/regles.dart` | `coutIndice` (multiplié par le multiplicateur du niveau) |
-| Le multiplicateur, le chrono, la présence du bouton indice ou de la question « Combien ? » d'un niveau | `lib/models/niveau.dart` | les valeurs de `facile`, `intermediaire`, `expert` |
-| Les longueurs de partie proposées (5 / 10 manches) | `lib/logic/regles.dart` | `longueursDePartie` |
-| La proportion de mots pièges | `lib/logic/regles.dart` | `unPiegeSur` |
+| Le multiplicateur, le chrono, les pièges, le prix et le nombre d'indices, l'objectif d'un niveau | `lib/models/niveau.dart` | les valeurs de `n1` à `n10` |
+| Le nombre de mots d'une partie | `lib/logic/regles.dart` | `motsParPartie` |
 | La façon de composer une partie | `lib/logic/tirage.dart` | `composerPioche` |
 | Ce qui se passe quand un mot est posé, quand le temps est écoulé, etc. | `lib/logic/partie_controller.dart` | `_apresCoup`, `validerPari`, `demanderIndice`, `abandonner`… |
 
@@ -96,9 +95,8 @@ L'accueil et la feuille « Règles et points » lisent ces valeurs : ils se mett
 
 #### Comment fonctionnent les indices
 
-Dans les trois niveaux, le bouton **Indice** dévoile une lettre de plus de chaque anagramme restante (jamais la dernière). Chaque indice coûte `coutIndice` × multiplicateur du niveau, soit **5 points en facile, 10 en intermédiaire et 15 en expert**, retirés du score sur-le-champ :
+Le bouton **Indice** dévoile une lettre de plus de chaque anagramme restante (jamais la dernière). Son prix (`prixIndice`, de 5 à 100 points) et le nombre autorisé par mot (`indicesMax`) dépendent du niveau :
 
-- trois indices coûtent autant qu'une anagramme rapporte (15) ;
 - l'indice **s'achète** : sans assez de points pour son coût, il est refusé (le score ne devient jamais négatif, et on ne peut pas se servir gratuitement en début de partie) ;
 - le bilan indique le nombre d'indices utilisés et les points de la manche, indices déduits ;
 - le record retient le meilleur score atteint.
@@ -147,9 +145,13 @@ Les choix faits pour que le son reste agréable sur la durée :
 
 ### …les mots du jeu
 
-Tout est dans `assets/donnees/balamo.json` :
+Les mots joués sont dans `assets/donnees/mastergrid.json`, fabriqué par `dart run tool/importer_mastergrid.dart` à partir des CSV « base de production C1 à C5 » (lignes avec un « Niveau attribué »).
 
-- `partie` : les mots jouables — `tuiles` (lettres en capitales sans accents), `anagrammes` (liste vide = mot piège), `niveau`, et `note` (clé de l'entrée de dictionnaire) ;
+Le dictionnaire (définitions et étymologies) est dans `assets/donnees/balamo.json`. Un mot sans entrée reste jouable : la révélation indique qu'il n'en a pas encore. La rubrique `partie` de ce fichier n'est plus jouée.
+
+
+Le dictionnaire contient :
+
 - `mots` : les entrées de dictionnaire (définition, racines, fiche étymologique en mini-markdown) ;
 - `orthographes` : pour chaque suite de lettres, la ou les formes accentuées et le mot auquel elles renvoient.
 
@@ -159,7 +161,7 @@ Si tu régénères le prototype HTML depuis ta base de notes, l'outil d'import e
 dart run tool/importer_donnees.dart "chemin/vers/Le ForMika, anagrammes.html"
 ```
 
-Puis `flutter test` : `test/donnees_et_tirage_test.dart` vérifie la cohérence du nouveau fichier (anagrammes valides, définitions présentes, assez de mots par niveau).
+Puis `flutter test` : `test/donnees_et_tirage_test.dart` vérifie la cohérence des deux fichiers (anagrammes valides, réserve de chaque niveau).
 
 ## Le trajet d'un geste, pas à pas
 

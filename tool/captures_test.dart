@@ -49,7 +49,7 @@ void main() {
   Future<PartieController> lancer(
     WidgetTester tester, {
     String? mot,
-    Niveau niveau = Niveau.facile,
+    Niveau niveau = Niveau.n1,
     double largeur = 390,
     double hauteur = 844,
     Brightness theme = Brightness.light,
@@ -74,7 +74,7 @@ void main() {
   });
 
   testWidgets('pari, recherche et révélation (facile)', (tester) async {
-    final partie = await lancer(tester, mot: 'CHIEN');
+    final partie = await lancer(tester, mot: 'LAPIN', niveau: Niveau.n2);
     partie.commencerPartie();
     await tester.pumpAndSettle();
     await tester.tap(find.text('Oui'));
@@ -84,15 +84,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Indice −5', findRichText: true));
     await tester.pump(const Duration(milliseconds: 300));
-    await _poser(tester, 'NIC');
+    await _poser(tester, 'PAL');
     await _capture(tester, '03-recherche');
 
-    await _poser(tester, 'EH');
+    await _poser(tester, 'NI');
     await _capture(tester, '04-mot-refuse');
 
     partie.toutRamener();
     await tester.pumpAndSettle();
-    await _poser(tester, 'NICHE');
+    await _poser(tester, 'ALPIN');
     await tester.pump(const Duration(milliseconds: 500));
     await expectLater(
       find.byType(MaterialApp),
@@ -100,36 +100,36 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
-    await _poser(tester, 'CHINE');
+    await _poser(tester, 'PLAIN');
     await _capture(tester, '06-revelation');
     debugDisableShadows = true;
   });
 
-  testWidgets('pari avec « combien » (intermédiaire)', (tester) async {
-    final partie = await lancer(tester, mot: 'PITRE', niveau: Niveau.intermediaire);
+  testWidgets('pari avec « combien » (niveau 4)', (tester) async {
+    final partie = await lancer(tester, mot: 'REVEIL', niveau: Niveau.n4);
     partie.commencerPartie();
     await tester.pumpAndSettle();
     await tester.tap(find.text('Oui'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('4'));
+    await tester.tap(find.text('3'));
     await _capture(tester, '07-pari-combien');
     debugDisableShadows = true;
   });
 
-  testWidgets('expert en thème sombre, avec chrono', (tester) async {
+  testWidgets('compétition en thème sombre, avec chrono', (tester) async {
     final partie = await lancer(
       tester,
-      mot: 'ESPRIT',
-      niveau: Niveau.expert,
+      mot: 'MACHINES',
+      niveau: Niveau.n9,
       theme: Brightness.dark,
     );
     partie
       ..commencerPartie()
       ..choisirPari(true)
-      ..choisirNombre(5)
+      ..choisirNombre(3)
       ..validerPari();
     await tester.pump(const Duration(milliseconds: 600));
-    await _poser(tester, 'PIS');
+    await _poser(tester, 'CHI');
     await tester.pump(const Duration(milliseconds: 400));
     await expectLater(
       find.byType(MaterialApp),
@@ -141,8 +141,8 @@ void main() {
   });
 
   testWidgets('mot piège', (tester) async {
-    final piege = donnees.partie.firstWhere((p) => p.niveau == Niveau.facile && p.estPiege);
-    final partie = await lancer(tester, mot: piege.tuiles);
+    final piege = donnees.partie.firstWhere((p) => p.niveau == Niveau.n2 && p.estPiege);
+    final partie = await lancer(tester, mot: piege.tuiles, niveau: Niveau.n2);
     partie
       ..commencerPartie()
       ..choisirPari(false)
@@ -152,13 +152,15 @@ void main() {
   });
 
   testWidgets('bilan', (tester) async {
-    final partie = await lancer(tester);
+    final partie = await lancer(tester, niveau: Niveau.n6);
     partie.commencerPartie();
     for (var m = 0; m < 5; m++) {
       final oui = !partie.courant.estPiege;
-      partie
-        ..choisirPari(m == 2 ? !oui : oui)
-        ..validerPari();
+      partie.choisirPari(m == 2 ? !oui : oui);
+      if (partie.demandeCombien) {
+        partie.choisirNombre(partie.courant.anagrammes.length.clamp(1, 6));
+      }
+      partie.validerPari();
       if (!partie.finie) {
         if (m == 1) partie.demanderIndice();
         final anagrammes = partie.courant.anagrammes;

@@ -58,7 +58,7 @@ class EcranBilan extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Etiquette(
-            'Bilan · ${partie.niveau.libelle.toLowerCase()} · ${partie.totalManches} manches',
+            'Bilan · niveau ${partie.niveau.numero} · ${partie.niveau.famille.toLowerCase()}',
           ),
           const SizedBox(height: 6),
           FittedBox(
@@ -77,7 +77,7 @@ class EcranBilan extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Nouveau record pour ce niveau et cette longueur de partie.',
+                    'Nouveau record pour ce niveau.',
                     style: Typo.ui(17, couleur: c.encre, graisse: FontWeight.w700),
                   ),
                 ),
@@ -88,6 +88,20 @@ class EcranBilan extends StatelessWidget {
               'Record à battre : ${partie.record} point${partie.record > 1 ? 's' : ''}.',
               style: Typo.ui(17, couleur: c.encre),
             ),
+          const SizedBox(height: 8),
+          Text(
+            _messageObjectif(partie),
+            style: Typo.ui(17,
+                couleur: partie.objectifAtteint ? c.ok : c.encre,
+                graisse: FontWeight.w700),
+          ),
+          if (partie.niveau.aChrono) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Temps de recherche : ${_duree(partie.tempsTotal)}.',
+              style: Typo.ui(17, couleur: c.encre),
+            ),
+          ],
           const SizedBox(height: 22),
           const _LigneTitres(),
           for (var i = 0; i < journal.length; i++)
@@ -129,6 +143,22 @@ class EcranBilan extends StatelessWidget {
       ),
     );
   }
+}
+
+String _messageObjectif(PartieController partie) {
+  final objectif = partie.objectif;
+  if (!partie.objectifAtteint) return 'Objectif non atteint : $objectif points.';
+  final gagne = partie.niveauGagne;
+  return gagne == null
+      ? 'Objectif de $objectif points atteint.'
+      : 'Objectif de $objectif points atteint : niveau ${gagne.numero} débloqué !';
+}
+
+/// « 42 s » ou « 2 min 05 s ».
+String _duree(Duration duree) {
+  final secondes = duree.inSeconds;
+  if (secondes < 60) return '$secondes s';
+  return '${secondes ~/ 60} min ${(secondes % 60).toString().padLeft(2, '0')} s';
 }
 
 const double _colNumero = 26;
@@ -204,9 +234,13 @@ class _LigneManche extends StatelessWidget {
                       decorationColor: c.violette.withValues(alpha: 0.45),
                     ),
                   ),
-                  if (manche.indices > 0)
+                  if (manche.indices > 0 || manche.duree != null)
                     Text(
-                      '${manche.indices} indice${manche.indices > 1 ? 's' : ''}',
+                      [
+                        if (manche.duree != null) _duree(manche.duree!),
+                        if (manche.indices > 0)
+                          '${manche.indices} indice${manche.indices > 1 ? 's' : ''}',
+                      ].join(' · '),
                       style: Typo.ui(13, couleur: c.encreDouce, hauteur: 1.1),
                     ),
                 ],

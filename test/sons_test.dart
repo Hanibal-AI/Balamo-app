@@ -15,7 +15,7 @@ import 'polices.dart';
 
 /// Lance une partie et note, dans l'ordre, tous les événements signalés.
 (PartieController, List<Retour>) _partieEcoutee({
-  Niveau niveau = Niveau.facile,
+  Niveau niveau = Niveau.n1,
   List<String> anagrammes = const ['POUTRE', 'TOUPER'],
   HorlogeDeTest? horloge,
 }) {
@@ -137,7 +137,7 @@ void main() {
     test('le chrono fait tic pendant les dix dernières secondes, puis sonne la fin', () {
       fakeAsync((async) {
         final horloge = HorlogeDeTest();
-        final (partie, entendus) = _partieEcoutee(niveau: Niveau.expert, horloge: horloge);
+        final (partie, entendus) = _partieEcoutee(niveau: Niveau.n3, horloge: horloge);
         partie
           ..commencerPartie()
           ..choisirPari(true)

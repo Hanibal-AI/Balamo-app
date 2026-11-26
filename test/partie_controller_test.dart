@@ -1,3 +1,4 @@
+import 'package:balamo/logic/partie_controller.dart';
 import 'package:balamo/logic/regles.dart';
 import 'package:balamo/models/etat_manche.dart';
 import 'package:balamo/models/niveau.dart';
@@ -55,8 +56,8 @@ void main() {
 
     test('intermédiaire : il faut dire combien ; le bon nombre rapporte +20, le tout ×2', () {
       final partie = creerPartie(
-        donneesDeTest(niveau: Niveau.intermediaire),
-        niveau: Niveau.intermediaire,
+        donneesDeTest(niveau: Niveau.n4),
+        niveau: Niveau.n4,
       )..commencerPartie();
       partie.choisirPari(true);
       expect(partie.demandeCombien, isTrue);
@@ -69,8 +70,8 @@ void main() {
 
     test('un mauvais nombre ne rapporte que le pari', () {
       final partie = creerPartie(
-        donneesDeTest(niveau: Niveau.intermediaire),
-        niveau: Niveau.intermediaire,
+        donneesDeTest(niveau: Niveau.n4),
+        niveau: Niveau.n4,
       )..commencerPartie();
       partie
         ..choisirPari(true)
@@ -213,7 +214,7 @@ void main() {
       partie.demanderIndice();
       expect(partie.masque('POUTRE'), 'P·····');
       expect(partie.masque('TOUPER'), 'T·····');
-      expect(partie.score, 10 - Regles.coutIndice);
+      expect(partie.score, 10 - Niveau.n1.prixIndice);
       expect(partie.journal.single.indices, 1);
       expect(partie.journal.single.points, 5);
       expect(partie.message, contains('−5'));
@@ -260,44 +261,46 @@ void main() {
       partie.demanderIndice(); // 20 points
       expect(partie.score, 20);
       expect(partie.record, 25);
-      expect(stockage.lireRecord(Niveau.facile, 5), 25);
+      expect(stockage.lireRecord(Niveau.n1), 25);
     });
 
-    test('en intermédiaire et en expert, un indice coûte 5 × le multiplicateur', () {
-      for (final niveau in [Niveau.intermediaire, Niveau.expert]) {
-        final partie = creerPartie(donneesDeTest(niveau: niveau), niveau: niveau)
-          ..commencerPartie();
+    test('le prix et le nombre d\'indices suivent le niveau', () {
+      for (final niveau in [Niveau.n4, Niveau.n5, Niveau.n10]) {
+        final partie = creerPartie(
+          donneesDeTest(niveau: niveau, anagrammes: const ['POUTRE']),
+          niveau: niveau,
+        )..commencerPartie();
         partie
           ..choisirPari(true)
-          ..choisirNombre(2)
+          ..choisirNombre(1)
           ..validerPari();
-        expect(partie.indicePropose, isTrue);
-        final cout = Regles.coutIndice * niveau.multiplicateur;
-        expect(partie.coutIndice, cout);
+        expect(partie.coutIndice, niveau.prixIndice);
         final score = partie.score;
-        expect(score, greaterThanOrEqualTo(cout), reason: 'assez de points');
 
-        partie.demanderIndice();
-        expect(partie.indices, 1);
-        expect(partie.score, score - cout);
+        for (var i = 0; i < 5; i++) {
+          partie.demanderIndice();
+        }
+        final achetes = [niveau.indicesMax!, score ~/ niveau.prixIndice]
+            .reduce((a, b) => a < b ? a : b);
+        expect(partie.indices, achetes, reason: '${niveau.numero}');
+        expect(partie.score, score - achetes * niveau.prixIndice);
         partie.dispose();
       }
     });
   });
 
-  group('Le chrono (expert)', () {
+  group('Le chrono (compétition)', () {
     test('90 secondes, puis la manche s\'arrête toute seule', () {
       fakeAsync((async) {
         final horloge = HorlogeDeTest();
         final partie = creerPartie(
-          donneesDeTest(niveau: Niveau.expert),
-          niveau: Niveau.expert,
+          donneesDeTest(niveau: Niveau.n3),
+          niveau: Niveau.n3,
           horloge: horloge,
         )..commencerPartie();
         expect(partie.secondesRestantes, isNull, reason: 'pas de chrono pendant le pari');
         partie
           ..choisirPari(true)
-          ..choisirNombre(2)
           ..validerPari();
         expect(partie.secondesRestantes, 90);
         expect(partie.chronoUrgent, isFalse);
@@ -319,10 +322,10 @@ void main() {
       });
     });
 
-    test('trouver le mot ×3 en expert', () {
+    test('trouver le mot ×3 au niveau 9', () {
       final partie = creerPartie(
-        donneesDeTest(niveau: Niveau.expert, anagrammes: const ['POUTRE']),
-        niveau: Niveau.expert,
+        donneesDeTest(niveau: Niveau.n9, anagrammes: const ['POUTRE']),
+        niveau: Niveau.n9,
       )..commencerPartie();
       partie
         ..choisirPari(true)
@@ -358,7 +361,7 @@ void main() {
       expect(partie.journal.every((j) => j.pariJuste == true), isTrue);
       expect(partie.journal.fold<int>(0, (s, j) => s + j.points), partie.score);
       expect(partie.nouveauRecord, isTrue);
-      expect(stockage.lireRecord(Niveau.facile, 5), partie.score);
+      expect(stockage.lireRecord(Niveau.n1), partie.score);
 
       // Rejouer : le record précédent devient celui à battre.
       final record = partie.score;
@@ -369,23 +372,21 @@ void main() {
       expect(partie.nouveauRecord, isFalse);
     });
 
-    test('un record par niveau et par longueur de partie', () {
-      final stockage = StockageMemoire()..ecrireRecord(Niveau.expert, 10, 420);
+    test('un record par niveau', () {
+      final stockage = StockageMemoire(niveauDebloque: 10)
+        ..ecrireRecord(Niveau.n9, 420);
       final partie = creerPartie(chargerVraiesDonnees(), stockage: stockage);
       expect(partie.record, 0);
-      partie
-        ..choisirNiveau(Niveau.expert)
-        ..choisirTotalManches(10);
+      partie.choisirNiveau(Niveau.n9);
       expect(partie.record, 420);
-      expect(stockage.dernierNiveau, Niveau.expert);
-      expect(stockage.dernieresManches, 10);
+      expect(stockage.dernierNiveau, Niveau.n9);
     });
 
     test('quitter ramène à l\'accueil et arrête le chrono', () {
       fakeAsync((async) {
         final partie = creerPartie(
-          donneesDeTest(niveau: Niveau.expert),
-          niveau: Niveau.expert,
+          donneesDeTest(niveau: Niveau.n9),
+          niveau: Niveau.n9,
           horloge: HorlogeDeTest(),
         )..commencerPartie();
         partie
@@ -397,6 +398,84 @@ void main() {
         expect(partie.secondesRestantes, isNull);
         expect(async.pendingTimers, isEmpty);
       });
+    });
+  });
+
+  group('La progression', () {
+    /// Joue une partie entière, en trouvant tout ou en ratant tout.
+    void jouer(PartieController partie, {required bool reussir}) {
+      partie.commencerPartie();
+      while (partie.vue == Vue.jeu) {
+        final aDesAnagrammes = !partie.courant.estPiege;
+        partie.choisirPari(reussir == aDesAnagrammes);
+        if (partie.demandeCombien) {
+          partie.choisirNombre(partie.courant.anagrammes.length.clamp(1, 6));
+        }
+        partie.validerPari();
+        if (reussir && !partie.finie) {
+          for (final a in partie.courant.anagrammes) {
+            poser(partie, a);
+          }
+        }
+        if (!partie.finie) partie.abandonner();
+        partie.suivant();
+      }
+    }
+
+    test('au départ, seul le niveau 1 est ouvert', () {
+      final partie = creerPartie(chargerVraiesDonnees(), stockage: StockageMemoire());
+      expect(Niveau.values.where(partie.estDebloque), [Niveau.n1]);
+      partie
+        ..choisirNiveau(Niveau.n2)
+        ..choisirCategorie(Categorie.competition);
+      expect(partie.niveau, Niveau.n1);
+    });
+
+    test('l\'objectif atteint débloque le niveau suivant, une seule fois', () {
+      final stockage = StockageMemoire();
+      final partie = creerPartie(chargerVraiesDonnees(), stockage: stockage);
+
+      jouer(partie, reussir: false);
+      expect(partie.objectifAtteint, isFalse);
+      expect(stockage.niveauDebloque, 1);
+
+      jouer(partie, reussir: true);
+      // Niveau 1 : cinq mots à une anagramme, 35 points chacun ; objectif 50 %.
+      expect(partie.objectif, 88);
+      expect(partie.niveauGagne, Niveau.n2);
+      expect(stockage.niveauDebloque, 2);
+
+      jouer(partie, reussir: true);
+      expect(partie.niveauGagne, isNull);
+      expect(stockage.niveauDebloque, 2);
+    });
+
+    test('choisir une catégorie prend son plus haut niveau ouvert', () {
+      final partie = creerPartie(chargerVraiesDonnees(),
+          stockage: StockageMemoire(niveauDebloque: 7));
+      partie.choisirCategorie(Categorie.competition);
+      expect(partie.niveau, Niveau.n6);
+      partie.choisirCategorie(Categorie.entrainement);
+      expect(partie.niveau, Niveau.n7);
+    });
+
+    test('le temps de recherche est mesuré en compétition seulement', () {
+      for (final (niveau, attendu) in [
+        (Niveau.n3, const Duration(seconds: 12)),
+        (Niveau.n1, null),
+      ]) {
+        final horloge = HorlogeDeTest();
+        final partie = creerPartie(donneesDeTest(niveau: niveau),
+            niveau: niveau, horloge: horloge)
+          ..commencerPartie()
+          ..choisirPari(true)
+          ..validerPari();
+        horloge.avancer(const Duration(seconds: 12));
+        partie.abandonner();
+        expect(partie.journal.single.duree, attendu);
+        expect(partie.tempsTotal, attendu ?? Duration.zero);
+        partie.dispose();
+      }
     });
   });
 }
