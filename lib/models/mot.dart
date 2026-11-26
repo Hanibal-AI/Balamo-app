@@ -23,12 +23,52 @@ class Mot {
   final List<Racine> racines;
   final Fiche fiche;
 
-  bool get definitionARelire => statut == 'à relire';
+  bool get definitionARelire => statut == 'à relire' && definition.isNotEmpty;
 
   bool get aEtymologie =>
       fiche.enUnePhrase.isNotEmpty ||
       fiche.origine.isNotEmpty ||
       racines.isNotEmpty;
+
+  /// Entrée réduite à ce qu'apporte un [complement], pour un mot absent du
+  /// dictionnaire.
+  factory Mot.vide(String lemme) => Mot(
+        lemme: lemme,
+        nature: '',
+        definition: '',
+        statut: '',
+        certitude: null,
+        racines: const [],
+        fiche: const Fiche(
+            enUnePhrase: '', origine: '', aRetenir: '', sources: '', etapes: []),
+      );
+
+  /// Cette entrée, où le [complement] remplit ce qui manque. Une définition
+  /// importée est « à relire ».
+  Mot completePar(Complement complement) {
+    final ajouteDefinition =
+        definition.isEmpty && complement.definition.isNotEmpty;
+    final ajouteEtymologie =
+        !aEtymologie && complement.etymologie.isNotEmpty;
+    if (!ajouteDefinition && !ajouteEtymologie) return this;
+    return Mot(
+      lemme: lemme,
+      nature: nature,
+      definition: ajouteDefinition ? complement.definition : definition,
+      statut: ajouteDefinition ? 'à relire' : statut,
+      certitude: certitude,
+      racines: racines,
+      fiche: ajouteEtymologie
+          ? Fiche(
+              enUnePhrase: complement.etymologie,
+              origine: '',
+              aRetenir: fiche.aRetenir,
+              sources: fiche.sources,
+              etapes: fiche.etapes,
+            )
+          : fiche,
+    );
+  }
 
   factory Mot.fromJson(Map<String, dynamic> j) => Mot(
         lemme: (j['lemme'] ?? '') as String,
@@ -41,6 +81,19 @@ class Mot {
             .toList(growable: false),
         fiche: Fiche.fromJson((j['fiche'] ?? const <String, dynamic>{})
             as Map<String, dynamic>),
+      );
+}
+
+/// Définition et étymologie importées du CSV pour un mot (vides si absentes).
+class Complement {
+  const Complement({this.definition = '', this.etymologie = ''});
+
+  final String definition;
+  final String etymologie;
+
+  factory Complement.fromJson(Map<String, dynamic> j) => Complement(
+        definition: (j['definition'] ?? '') as String,
+        etymologie: (j['etymologie'] ?? '') as String,
       );
 }
 

@@ -31,6 +31,7 @@ Pas encore envoyé.
 
 ### Ajouté
 
+- Import des définitions et étymologies depuis un fichier CSV, pour compléter le dictionnaire.
 - Déblocage du niveau suivant en atteignant un objectif de score.
 - En compétition, temps de recherche mesuré par manche et affiché au bilan.
 

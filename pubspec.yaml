@@ -65,6 +65,7 @@ flutter:
   assets:
     - assets/donnees/balamo.json
     - assets/donnees/mastergrid.json
+    - assets/donnees/definitions.json
     # Bruitages et musique, fabriqués par tool/generer_sons.py.
     - assets/sons/
 

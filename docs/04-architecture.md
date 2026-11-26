@@ -150,6 +150,8 @@ Les mots joués sont dans `assets/donnees/mastergrid.json`, fabriqué par `dart 
 Le dictionnaire (définitions et étymologies) est dans `assets/donnees/balamo.json`. Un mot sans entrée reste jouable : la révélation indique qu'il n'en a pas encore. La rubrique `partie` de ce fichier n'est plus jouée.
 
 
+Les définitions et étymologies saisies dans `docs/tasks/mots-sans-definition.csv` sont importées dans `assets/donnees/definitions.json` par `dart run tool/importer_definitions.dart` (voir [le mode d'emploi](tasks/LISEZMOI.md)).
+
 Le dictionnaire contient :
 
 - `mots` : les entrées de dictionnaire (définition, racines, fiche étymologique en mini-markdown) ;

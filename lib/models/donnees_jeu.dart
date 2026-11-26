@@ -69,14 +69,16 @@ class SensRevele {
   final Mot mot;
 }
 
-/// Toutes les données du jeu : le dictionnaire (`assets/donnees/balamo.json`)
-/// et les mots des dix niveaux (`assets/donnees/mastergrid.json`).
+/// Toutes les données du jeu : le dictionnaire (`assets/donnees/balamo.json`),
+/// les mots des dix niveaux (`mastergrid.json`) et les textes importés
+/// (`definitions.json`).
 class DonneesJeu {
   DonneesJeu({
     required this.genere,
     required this.mots,
     required this.orthographes,
     required this.partie,
+    this.complements = const {},
   });
 
   /// Date de génération du fichier de données.
@@ -90,6 +92,9 @@ class DonneesJeu {
 
   /// Les mots jouables.
   final List<EntreePartie> partie;
+
+  /// Textes importés (`assets/donnees/definitions.json`), par orthographe.
+  final Map<String, Complement> complements;
 
   /// L'entrée de dictionnaire du mot proposé, s'il en a une.
   Mot? motDe(EntreePartie entree) {
@@ -139,14 +144,38 @@ class DonneesJeu {
         mot: mot,
       ));
     }
+    final complement = complements[orthographe];
+    if (complement == null) return sens;
+    if (sens.isEmpty) {
+      final forme = formeDe(orthographe);
+      return [
+        SensRevele(
+          titre: forme,
+          formeDe: null,
+          mot: Mot.vide(forme).completePar(complement),
+        ),
+      ];
+    }
+    // Le complément ne sert qu'au premier sens, et seulement pour ses manques.
+    final premier = sens.first;
+    sens[0] = SensRevele(
+      titre: premier.titre,
+      formeDe: premier.formeDe,
+      mot: premier.mot.completePar(complement),
+    );
     return sens;
   }
 
   factory DonneesJeu.fromJson(
     Map<String, dynamic> j,
-    Map<String, dynamic> grille,
-  ) =>
+    Map<String, dynamic> grille, [
+    Map<String, dynamic> complements = const {},
+  ]) =>
       DonneesJeu(
+        complements: complements.map(
+          (cle, v) =>
+              MapEntry(cle, Complement.fromJson(v as Map<String, dynamic>)),
+        ),
         genere: (j['genere'] ?? '') as String,
         mots: (j['mots'] as Map<String, dynamic>).map(
           (cle, v) => MapEntry(cle, Mot.fromJson(v as Map<String, dynamic>)),

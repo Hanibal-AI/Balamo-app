@@ -92,11 +92,17 @@ class _Sens extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 8),
-        TexteMd(
-          mot.definition,
-          enLigne: true,
-          style: Typo.texte(19.5, couleur: c.encre, hauteur: 1.45),
-        ),
+        if (mot.definition.isEmpty)
+          Text(
+            'Pas encore de définition pour ce mot.',
+            style: Typo.texte(18, couleur: c.encreDouce, italique: true, hauteur: 1.35),
+          )
+        else
+          TexteMd(
+            mot.definition,
+            enLigne: true,
+            style: Typo.texte(19.5, couleur: c.encre, hauteur: 1.45),
+          ),
         if (mot.definitionARelire) ...[
           const SizedBox(height: 8),
           Align(

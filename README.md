@@ -88,6 +88,93 @@ dart run tool/importer_mastergrid.dart
 flutter test
 ```
 
+## Définitions et étymologies
+
+Les mots sans définition ou sans étymologie sont listés dans [`docs/tasks/mots-sans-definition.csv`](docs/tasks/mots-sans-definition.csv). On le remplit, puis on l'importe dans le jeu. La consigne à donner à une IA est dans [le mode d'emploi](docs/tasks/LISEZMOI.md).
+
+### Avertissements
+
+> - **CSV uniquement.** Les fichiers `.xlsx`, `.ods` ou autres ne sont pas lus.
+> - **Séparateur : la barre verticale `|`.** Ni virgule, ni point-virgule, ni tabulation, ni barre oblique `/`.
+> - **Encodage : UTF-8**, sinon les accents sont abîmés ou le fichier est illisible.
+> - **Aucun guillemet autour des colonnes.** Un guillemet ajouté par un tableur serait affiché tel quel dans le jeu.
+> - **Garder tous les textes dans le CSV.** `assets/donnees/definitions.json` est entièrement refait à chaque import : importer un lot partiel ou un fichier vierge efface les textes importés auparavant. Ne pas modifier ce fichier à la main.
+> - **Une ligne refusée n'est pas importée**, même si elle l'avait été auparavant. La corriger et relancer l'import avant de commiter.
+> - **Excel :** « Enregistrer sous > CSV » ne garde pas forcément la barre verticale. Vérifier le fichier avant de l'importer.
+> - **Relire les textes**, surtout ceux produits par une IA : une étymologie peut être inventée.
+
+### Format
+
+```text
+id|mot|categorie|definition|etymologie
+CAVE|cave|C1|Pièce en sous-sol, où l'on garde le vin.|Du latin « cava », « creux ».
+```
+
+| Colonne | Contenu | À modifier ? |
+| --- | --- | --- |
+| `id` | Le mot en capitales sans accents ; clé utilisée par le jeu | Non |
+| `mot` | Le mot accentué | Non |
+| `categorie` | `C1` (courant) à `C5` (très rare) : degré de la série dans laquelle le mot est joué | Non |
+| `definition` | Texte de la définition (peut rester vide) | Oui |
+| `etymologie` | Texte de l'étymologie (peut rester vide) | Oui |
+
+- La première ligne doit rester exactement `id|mot|categorie|definition|etymologie`.
+- Chaque ligne a **5 colonnes**, donc **4 barres `|`**.
+- Dans les textes, virgules, points-virgules, apostrophes, guillemets et parenthèses sont libres. La barre `|` et le retour à la ligne sont interdits.
+
+### Importer
+
+Depuis la racine du projet (sur le VPS, lancer d'abord `source ~/development/env.sh`) :
+
+1. Importer le CSV :
+
+   ```bash
+   dart run tool/importer_definitions.dart
+   ```
+
+   Pour un fichier placé ailleurs (il doit contenir **tous** les textes à garder) :
+
+   ```bash
+   dart run tool/importer_definitions.dart chemin/vers/fichier.csv
+   ```
+
+2. Lire le résultat affiché (voir ci-dessous) et corriger les lignes refusées.
+
+3. Vérifier le projet :
+
+   ```bash
+   flutter analyze
+   ```
+
+   ```bash
+   flutter test
+   ```
+
+4. Relancer `flutter run` ou recompiler l'application : un rechargement à chaud ne suffit pas.
+
+5. Commiter ensemble le CSV et `assets/donnees/definitions.json`. Pour diffuser les textes, suivre la section [Versions](#versions).
+
+### Résultat de l'import
+
+L'outil affiche le nombre de mots complétés, les lignes refusées avec leur numéro (les 20 premières en détail) et les mots encore incomplets par catégorie.
+
+| Message | Cause | Effet |
+| --- | --- | --- |
+| `Fichier introuvable` | Mauvais chemin | Rien n'est modifié |
+| `la première ligne doit être « … »` | En-tête ou séparateur incorrect | Rien n'est modifié |
+| `… colonnes au lieu de 5` | Une barre `|` en trop ou en moins, ou un texte coupé sur deux lignes | Ligne refusée |
+| `id « … » inconnu dans le jeu` | `id` modifié | Ligne refusée |
+| `doit avoir le mot « … » et la catégorie …` | `mot` ou `categorie` modifié | Ligne refusée |
+| `id « … » en double` | Même `id` sur deux lignes | Seule la première est gardée |
+
+Les lignes valides sont importées même si d'autres sont refusées.
+
+### Dans le jeu
+
+- Seules les lignes qui ont une définition ou une étymologie sont importées : on peut remplir le fichier petit à petit.
+- Le dictionnaire existant (`assets/donnees/balamo.json`) reste prioritaire : le CSV ne remplit que ce qui lui manque.
+- Une définition importée porte la mention « définition à relire ».
+
 ## Sons
 
 Chaque action a son bruitage (jeton posé ou repris, mélange, indice, mot trouvé ou refusé, chrono…) et une musique d'ambiance tourne en fond. Tout est synthétisé par [`tool/generer_sons.py`](tool/generer_sons.py) ; les interrupteurs **Sons** et **Musique** sont sur l'accueil. Détails dans [04 · Architecture](docs/04-architecture.md).

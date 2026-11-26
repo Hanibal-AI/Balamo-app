@@ -35,6 +35,7 @@ class DonneesDeTest extends DonneesJeu {
     required super.mots,
     required super.orthographes,
     required super.partie,
+    super.complements,
   });
 
   @override
